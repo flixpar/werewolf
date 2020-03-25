@@ -5,8 +5,10 @@ var sentLoaded = false;
 var role;
 var gameinfo;
 
-var userid = document.getElementById("userid").dataset.userid;
+var userid = document.getElementById("data-element").dataset.userid;
+var username = document.getElementById("data-element").dataset.username;
 console.log("User ID: ".concat(userid));
+console.log("User name: ".concat(username));
 
 mainArea = document.getElementById("main");
 
@@ -52,18 +54,18 @@ generalSocket.on("start", _ => {
 	mainArea.innerHTML = "<p>Game starting...</p>";
 });
 
-generalSocket.on("werewolfTurnStart", _ => {
-	console.log("Werewolf turn");
+function turnStart(turnRole, turnInstruction) {
+	console.log("Turn: ".concat(turnRole));
 	mainArea.innerHTML = "";
 
 	var turnElement = document.createElement("p");
 	turnElement.id = "turn-display";
-	turnElement.innerHTML = "Turn: Werewolves";
+	turnElement.innerHTML = "Turn: ".concat(turnRole);
 	mainArea.appendChild(turnElement);
 
 	var message;
-	if (role == "werewolf") {
-		message = "It's your turn! Acknowledge the other werewolf if there is one.";
+	if (role == turnRole) {
+		message = "It's your turn! ".concat(turnInstruction);
 	} else {
 		message = "It's not your turn. Keep sleeping.";
 	}
@@ -72,6 +74,20 @@ generalSocket.on("werewolfTurnStart", _ => {
 	turnInfoElement.id = "turn-info-message";
 	turnInfoElement.innerHTML = message;
 	mainArea.appendChild(turnInfoElement);
+}
+
+function createReadyButton(eventName) {
+	var readyButton = document.createElement("button");
+	readyButton.id = "ready-button";
+	readyButton.innerHTML = "Continue";
+	readyButton.onclick = _ => {
+		playerSocket.emit(eventName);
+	};
+	mainArea.appendChild(readyButton);
+}
+
+generalSocket.on("werewolfTurnStart", _ => {
+	turnStart("werewolf", "Acknowledge the other werewolf if there is one.");
 });
 
 playerSocket.on("werewolfNames", names => {
@@ -88,35 +104,11 @@ playerSocket.on("werewolfNames", names => {
 	werewolfListElement.innerHTML = "The werewolves are: ".concat(s);
 	mainArea.appendChild(werewolfListElement);
 
-	var readyButton = document.createElement("button");
-	readyButton.id = "werewolf-ready-button";
-	readyButton.innerHTML = "Continue";
-	readyButton.onclick = _ => {
-		playerSocket.emit("werewolfAck");
-	};
-	mainArea.appendChild(readyButton);
+	createReadyButton("werewolfAck");
 });
 
 generalSocket.on("minionTurnStart", _ => {
-	console.log("Minion turn");
-	mainArea.innerHTML = "";
-
-	var turnElement = document.createElement("p");
-	turnElement.id = "turn-display";
-	turnElement.innerHTML = "Turn: Minion";
-	mainArea.appendChild(turnElement);
-
-	var message;
-	if (role == "minion") {
-		message = "It's your turn! Check who the werewolves are.";
-	} else {
-		message = "It's not your turn. Keep sleeping.";
-	}
-
-	var turnInfoElement = document.createElement("p");
-	turnInfoElement.id = "turn-info-message";
-	turnInfoElement.innerHTML = message;
-	mainArea.appendChild(turnInfoElement);
+	turnStart("minion", "Check who the werewolves are.");
 });
 
 playerSocket.on("minionNames", names => {
