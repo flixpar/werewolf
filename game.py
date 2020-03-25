@@ -8,7 +8,7 @@ from server import socketio
 nusers = 2
 roles = [
 	"werewolf",
-	"minion",
+	"seer",
 ]
 
 def play(users):
@@ -53,6 +53,25 @@ def night(users):
 		minion = users[users.startrole == "minion"].iloc[0]
 		socketio.emit("minionNames", werewolfNames, namespace="/"+minion.userid)
 		waitUsersAck((minion.userid,), "minionAck")
+
+	socketio.emit("seerTurnStart")
+
+	if any(users.startrole == "seer"):
+		seer = users[users.startrole == "seer"].iloc[0]
+		
+		@socketio.on("seerRequest", namespace="/"+seer.userid)
+		def seerRequest(names, *args):
+			print("seer request:", names)
+			response = {}
+			for name in names:
+				if any(users.username == name):
+					u = users[users.username == name].iloc[0]
+					response[name] = u.currentrole
+			socketio.emit("seerResponse", response, namespace="/"+seer.userid)
+
+		waitUsersAck((seer.userid,), "seerAck")
+
+	socketio.emit("robberTurnStart")
 
 def day(users):
 	print("Day phase")

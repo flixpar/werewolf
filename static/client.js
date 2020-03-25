@@ -125,11 +125,72 @@ playerSocket.on("minionNames", names => {
 	werewolfListElement.innerHTML = "The werewolves are: ".concat(s);
 	mainArea.appendChild(werewolfListElement);
 
-	var readyButton = document.createElement("button");
-	readyButton.id = "minion-ready-button";
-	readyButton.innerHTML = "Continue";
-	readyButton.onclick = _ => {
-		playerSocket.emit("minionAck");
+	createReadyButton("minionAck");
+});
+
+generalSocket.on("seerTurnStart", _ => {
+	turnStart("seer", "Pick a player or two center cards to see their role.");
+	if (role == "seer") {
+		seerRequest();
+	}
+});
+
+function seerRequest() {
+	var seerSelect = document.createElement("select");
+	seerSelect.id = "seer-select";
+	mainArea.appendChild(seerSelect);
+
+	gameinfo.usernames.forEach(name => {
+		if (name != username) {
+			var option = document.createElement("option");
+			option.innerHTML = name;
+			seerSelect.appendChild(option);
+		}
+	});
+
+	var seerRequestButton = document.createElement("button");
+	seerRequestButton.id = "seer-request-button";
+	seerRequestButton.innerHTML = "Check role";
+	seerRequestButton.onclick = _ => {
+		console.log("Checking: ".concat(seerSelect.value));
+		playerSocket.emit("seerRequest", [seerSelect.value,]);
 	};
-	mainArea.appendChild(readyButton);
+	mainArea.appendChild(seerRequestButton);
+}
+
+playerSocket.on("seerResponse", seenRoles => {
+
+	console.log("got seer response");
+	console.log(seenRoles);
+
+	var seerTableTitle = document.createElement("p");
+	seerTableTitle.id = "seer-table-title";
+	seerTableTitle.innerHTML = "Seen roles:";
+	mainArea.appendChild(seerTableTitle);
+
+	var seerResponseTable = document.createElement("table");
+	seerResponseTable.id = "seer-response-table";
+	mainArea.appendChild(seerResponseTable);
+
+	var header = document.createElement("tr");
+	seerResponseTable.appendChild(header);
+	nameHeader = document.createElement("th");
+	roleHeader = document.createElement("th");
+	nameHeader.innerHTML = "Name";
+	roleHeader.innerHTML = "Role";
+	header.appendChild(nameHeader);
+	header.appendChild(roleHeader);
+
+	for (const name in seenRoles) {
+		var row = document.createElement("tr");
+		var nameElement = document.createElement("td");
+		var roleElement = document.createElement("td");
+		nameElement.innerHTML = name;
+		roleElement.innerHTML = seenRoles[name];
+		row.appendChild(nameElement);
+		row.appendChild(roleElement);
+		seerResponseTable.appendChild(row);
+	}
+
+	createReadyButton("seerAck");
 });
