@@ -96,3 +96,48 @@ playerSocket.on("werewolfNames", names => {
 	};
 	mainArea.appendChild(readyButton);
 });
+
+generalSocket.on("minionTurnStart", _ => {
+	console.log("Minion turn");
+	mainArea.innerHTML = "";
+
+	var turnElement = document.createElement("p");
+	turnElement.id = "turn-display";
+	turnElement.innerHTML = "Turn: Minion";
+	mainArea.appendChild(turnElement);
+
+	var message;
+	if (role == "minion") {
+		message = "It's your turn! Check who the werewolves are.";
+	} else {
+		message = "It's not your turn. Keep sleeping.";
+	}
+
+	var turnInfoElement = document.createElement("p");
+	turnInfoElement.id = "turn-info-message";
+	turnInfoElement.innerHTML = message;
+	mainArea.appendChild(turnInfoElement);
+});
+
+playerSocket.on("minionNames", names => {
+	var s = "";
+	for (var i = 0; i < names.length; i++) {
+		s = s.concat(names[i]);
+		if (i < names.length-1) {
+			s = s.concat(", ");
+		}
+	}
+
+	var werewolfListElement = document.createElement("p");
+	werewolfListElement.id = "werewolf-list";
+	werewolfListElement.innerHTML = "The werewolves are: ".concat(s);
+	mainArea.appendChild(werewolfListElement);
+
+	var readyButton = document.createElement("button");
+	readyButton.id = "minion-ready-button";
+	readyButton.innerHTML = "Continue";
+	readyButton.onclick = _ => {
+		playerSocket.emit("minionAck");
+	};
+	mainArea.appendChild(readyButton);
+});

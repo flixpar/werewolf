@@ -8,7 +8,7 @@ from server import socketio
 nusers = 2
 roles = [
 	"werewolf",
-	"villager",
+	"minion",
 ]
 
 def play(users):
@@ -48,6 +48,11 @@ def night(users):
 	waitUsersAck(werewolves.userid.tolist(), "werewolfAck")
 
 	socketio.emit("minionTurnStart")
+
+	if any(users.startrole == "minion"):
+		minion = users[users.startrole == "minion"].iloc[0]
+		socketio.emit("minionNames", werewolfNames, namespace="/"+minion.userid)
+		waitUsersAck((minion.userid,), "minionAck")
 
 def day(users):
 	print("Day phase")
