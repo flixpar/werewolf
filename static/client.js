@@ -237,3 +237,50 @@ playerSocket.on("robberResponse", newRole => {
 
 	createReadyButton("robberAck");
 });
+
+generalSocket.on("drunkTurnStart", _ => {
+	turnStart("drunk", "Swap your role with one in the middle.");
+	if (role == "drunk") {
+		drunkRequest();
+	}
+});
+
+function drunkRequest() {
+	var drunkSelect = document.createElement("select");
+	drunkSelect.id = "drunk-select";
+	mainArea.appendChild(drunkSelect);
+
+	for (var i = 1; i <= 3; i++) {
+		var option = document.createElement("option");
+		option.innerHTML = i;
+		drunkSelect.appendChild(option);
+	}
+
+	var drunkRequestButton = document.createElement("button");
+	drunkRequestButton.id = "drunk-request-button";
+	drunkRequestButton.innerHTML = "Swap";
+	drunkRequestButton.onclick = _ => {
+		console.log("Swapping with: ".concat(drunkSelect.value));
+		playerSocket.emit("drunkRequest", drunkSelect.value);
+
+		drunkSelect.remove();
+		drunkRequestButton.remove();
+	};
+	mainArea.appendChild(drunkRequestButton);
+}
+
+generalSocket.on("insomniacTurnStart", _ => {
+	turnStart("insomniac", "Check your current role.");
+});
+
+playerSocket.on("insomniacRole", newRole => {
+	console.log("got insomniac response");
+	console.log(newRole);
+
+	var newRoleElement = document.createElement("p");
+	newRoleElement.id = "new-role";
+	newRoleElement.innerHTML = "Your new role is: ".concat(newRole);
+	mainArea.appendChild(newRoleElement);
+
+	createReadyButton("insomniacAck");
+});

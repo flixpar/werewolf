@@ -1,15 +1,20 @@
 import random
 import time
+import uuid
 import pandas as pd
 from functools import partial
 
 from server import socketio
 
-nusers = 2
 roles = [
 	"werewolf",
+	"minion",
+	"seer",
 	"robber",
+	"insomniac",
 ]
+nusers = len(roles) - 3
+centerRoles = None
 
 def play(users):
 	night(users)
@@ -27,8 +32,9 @@ def night(users):
 	})
 
 	random.shuffle(roles)
-	users.startrole = roles
-	users.currentrole = roles
+	users.startrole = roles[:-3]
+	users.currentrole = roles[:-3]
+	centerRoles = roles[-3:]
 
 	for i, user in users.iterrows():
 		print("sending:", user.startrole, "to", user.userid)
@@ -77,16 +83,34 @@ def night(users):
 
 		@socketio.on("robberRequest", namespace="/"+robber.userid)
 		def robberRequest(name, *args):
+			oldrole = users[users.startrole == "robber"].iloc[0].currentrole
 			newrole = users[users.username == name].iloc[0].currentrole
 			print("robber swap:", robber.username, "with", name)
 			print("robber new role:", newrole)
 			users.loc[users.startrole == "robber", "currentrole"] = newrole
-			users.loc[users.username == name, "currentrole"] = "robber"
+			users.loc[users.username == name, "currentrole"] = oldrole
 			socketio.emit("robberResponse", newrole, namespace="/"+robber.userid)
 
 		waitUsersAck((robber.userid,), "robberAck")
 
 	socketio.emit("drunkTurnStart")
+
+	if any(users.startrole == "drunk"):
+		drunk = users[users.startrole == "drunk"].iloc[0]
+
+		@socketio.on("drunkRequest", namespace="/"+drunk.userid)
+		def drunkRequest(idx, *args):
+			oldrole = users[users.startrole == "drunk"].iloc[0].currentrole
+			newrole = centerRoles[int(idx)-1]
+			users.loc[users.startrole == "drunk", "currentrole"] = newrole
+			centerRoles[int(idx)-1] = oldrole
+
+	socketio.emit("insomniacTurnStart")
+
+	if any(users.startrole == "insomniac"):
+		insomniac = users[users.startrole == "insomniac"].iloc[0]
+		socketio.emit("insomniacRole", insomniac.currentrole, namespace="/"+insomniac.userid)
+		waitUsersAck((insomniac.userid,), "insomniacAck")
 
 def day(users):
 	print("Day phase")
