@@ -39,13 +39,7 @@ playerSocket.on("distributeRole", roleResponse => {
 	roleElement.innerHTML = "Your role is: ".concat(role);
 	mainArea.appendChild(roleElement);
 
-	var readyButton = document.createElement("button");
-	readyButton.id = "ready-button";
-	readyButton.innerHTML = "Ready";
-	readyButton.onclick = _ => {
-		playerSocket.emit("ready");
-	};
-	mainArea.appendChild(readyButton);
+	createReadyButton("ready", "Ready");
 });
 
 generalSocket.on("start", _ => {
@@ -76,12 +70,13 @@ function turnStart(turnRole, turnInstruction) {
 	mainArea.appendChild(turnInfoElement);
 }
 
-function createReadyButton(eventName) {
+function createReadyButton(eventName, buttonText="Continue") {
 	var readyButton = document.createElement("button");
 	readyButton.id = "ready-button";
-	readyButton.innerHTML = "Continue";
+	readyButton.innerHTML = buttonText;
 	readyButton.onclick = _ => {
 		playerSocket.emit(eventName);
+		readyButton.remove();
 	};
 	mainArea.appendChild(readyButton);
 }
@@ -154,6 +149,9 @@ function seerRequest() {
 	seerRequestButton.onclick = _ => {
 		console.log("Checking: ".concat(seerSelect.value));
 		playerSocket.emit("seerRequest", [seerSelect.value,]);
+
+		seerSelect.remove();
+		seerRequestButton.remove();
 	};
 	mainArea.appendChild(seerRequestButton);
 }
@@ -193,4 +191,49 @@ playerSocket.on("seerResponse", seenRoles => {
 	}
 
 	createReadyButton("seerAck");
+});
+
+generalSocket.on("robberTurnStart", _ => {
+	turnStart("robber", "Swap your role with another player's role.");
+	if (role == "robber") {
+		robberRequest();
+	}
+});
+
+function robberRequest() {
+	var robberSelect = document.createElement("select");
+	robberSelect.id = "robber-select";
+	mainArea.appendChild(robberSelect);
+
+	gameinfo.usernames.forEach(name => {
+		if (name != username) {
+			var option = document.createElement("option");
+			option.innerHTML = name;
+			robberSelect.appendChild(option);
+		}
+	});
+
+	var robberRequestButton = document.createElement("button");
+	robberRequestButton.id = "robber-request-button";
+	robberRequestButton.innerHTML = "Swap";
+	robberRequestButton.onclick = _ => {
+		console.log("Swapping with: ".concat(robberSelect.value));
+		playerSocket.emit("robberRequest", robberSelect.value);
+
+		robberSelect.remove();
+		robberRequestButton.remove();
+	};
+	mainArea.appendChild(robberRequestButton);
+}
+
+playerSocket.on("robberResponse", newRole => {
+	console.log("got robber response");
+	console.log(newRole);
+
+	var newRoleElement = document.createElement("p");
+	newRoleElement.id = "new-role";
+	newRoleElement.innerHTML = "Your new role is: ".concat(newRole);
+	mainArea.appendChild(newRoleElement);
+
+	createReadyButton("robberAck");
 });

@@ -8,7 +8,7 @@ from server import socketio
 nusers = 2
 roles = [
 	"werewolf",
-	"seer",
+	"robber",
 ]
 
 def play(users):
@@ -28,7 +28,7 @@ def night(users):
 
 	random.shuffle(roles)
 	users.startrole = roles
-	users.currentrole = users.startrole
+	users.currentrole = roles
 
 	for i, user in users.iterrows():
 		print("sending:", user.startrole, "to", user.userid)
@@ -58,20 +58,35 @@ def night(users):
 
 	if any(users.startrole == "seer"):
 		seer = users[users.startrole == "seer"].iloc[0]
-		
+
 		@socketio.on("seerRequest", namespace="/"+seer.userid)
 		def seerRequest(names, *args):
 			print("seer request:", names)
 			response = {}
 			for name in names:
-				if any(users.username == name):
-					u = users[users.username == name].iloc[0]
-					response[name] = u.currentrole
+				u = users[users.username == name].iloc[0]
+				response[name] = u.currentrole
 			socketio.emit("seerResponse", response, namespace="/"+seer.userid)
 
 		waitUsersAck((seer.userid,), "seerAck")
 
 	socketio.emit("robberTurnStart")
+
+	if any(users.startrole == "robber"):
+		robber = users[users.startrole == "robber"].iloc[0]
+
+		@socketio.on("robberRequest", namespace="/"+robber.userid)
+		def robberRequest(name, *args):
+			newrole = users[users.username == name].iloc[0].currentrole
+			print("robber swap:", robber.username, "with", name)
+			print("robber new role:", newrole)
+			users.loc[users.startrole == "robber", "currentrole"] = newrole
+			users.loc[users.username == name, "currentrole"] = "robber"
+			socketio.emit("robberResponse", newrole, namespace="/"+robber.userid)
+
+		waitUsersAck((robber.userid,), "robberAck")
+
+	socketio.emit("drunkTurnStart")
 
 def day(users):
 	print("Day phase")
