@@ -1,5 +1,7 @@
 console.log("Client started");
 
+var sentLoaded = false;
+
 var role;
 var gameinfo;
 
@@ -11,7 +13,12 @@ mainArea = document.getElementById("main");
 var generalSocket = io();
 var playerSocket = io("/".concat(userid));
 
-generalSocket.emit("loaded");
+generalSocket.on("serverReady", _ => {
+	if (!sentLoaded) {
+		generalSocket.emit("loaded", userid);
+		sentLoaded = true;
+	}
+});
 
 generalSocket.on("gameinfo", gameinfoResponse => {
 	console.log(gameinfoResponse);
@@ -33,7 +40,7 @@ playerSocket.on("distributeRole", roleResponse => {
 	readyButton.id = "ready-button";
 	readyButton.innerHTML = "Ready";
 	readyButton.onclick = _ => {
-		generalSocket.emit("ready");
+		generalSocket.emit("ready", userid);
 	};
 	mainArea.appendChild(readyButton);
 });
@@ -41,5 +48,50 @@ playerSocket.on("distributeRole", roleResponse => {
 generalSocket.on("start", _ => {
 	console.log("Game starting");
 	mainArea.innerHTML = "";
-	mainArea.innerHTML = "Game starting...";
+	mainArea.innerHTML = "<p>Game starting...</p>";
+});
+
+generalSocket.on("werewolfTurnStart", _ => {
+	console.log("Werewolf turn");
+	mainArea.innerHTML = "";
+
+	var turnElement = document.createElement("p");
+	turnElement.id = "turn-display";
+	turnElement.innerHTML = "Turn: Werewolves";
+	mainArea.appendChild(turnElement);
+
+	var message;
+	if (role == "werewolf") {
+		message = "It's your turn! Acknowledge the other werewolf if there is one.";
+	} else {
+		message = "It's not your turn. Keep sleeping.";
+	}
+
+	var turnInfoElement = document.createElement("p");
+	turnInfoElement.id = "turn-info-message";
+	turnInfoElement.innerHTML = message;
+	mainArea.appendChild(turnInfoElement);
+});
+
+playerSocket.on("werewolfNames", names => {
+	var s = "";
+	for (var i = 0; i < names.length; i++) {
+		s = s.concat(names[i]);
+		if (i < names.length-1) {
+			s = s.concat(", ");
+		}
+	}
+
+	var werewolfListElement = document.createElement("p");
+	werewolfListElement.id = "werewolf-list";
+	werewolfListElement.innerHTML = "The werewolves are: ".concat(s);
+	mainArea.appendChild(werewolfListElement);
+
+	var readyButton = document.createElement("button");
+	readyButton.id = "werewolf-ready-button";
+	readyButton.innerHTML = "Continue";
+	readyButton.onclick = _ => {
+		playerSocket.emit("werewolfAck", userid);
+	};
+	mainArea.appendChild(readyButton);
 });

@@ -26,8 +26,8 @@ def handle_sart():
 	global users
 	users = users.append(user, ignore_index=True)
 
-	if len(users) == 1:
-		socketio.start_background_task(game.night, users)
+	if len(users) == game.nusers:
+		socketio.start_background_task(game.play, users)
 
 	return redirect("/game/" + user["userid"])
 

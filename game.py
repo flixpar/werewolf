@@ -4,28 +4,20 @@ import pandas as pd
 
 from server import socketio
 
+nusers = 2
 roles = [
 	"werewolf",
-	"werewolf",
-	"villager",
-	"villager",
 	"villager",
 ]
+
+def play(users):
+	night(users)
+	day(users)
 
 def night(users):
 	print("night")
 
-	nusers = 1
-	nloaded = 0
-	nready = 0
-
-	@socketio.on("loaded")
-	def client_loaded():
-		nonlocal nloaded
-		nloaded += 1
-
-	while nloaded != nusers:
-		time.sleep(0.1)
+	waitUsersCallResponse(users.userid.tolist(), "serverReady", "loaded")
 
 	socketio.emit("gameinfo", {
 		"nusers": nusers,
@@ -40,15 +32,52 @@ def night(users):
 		print("sending:", user.role, "to", user.userid)
 		socketio.emit("distributeRole", {"role": user.role}, namespace="/"+user.userid)
 
-	@socketio.on("ready")
-	def client_ready():
-		nonlocal nready
-		nready += 1
-
-	while nready != nusers:
-		time.sleep(0.1)
+	waitUsersAck(users.userid.tolist(), "ready")
 
 	socketio.emit("start")
 
-def day():
+	socketio.emit("werewolfTurnStart")
+
+	werewolves = users[users.role == "werewolf"]
+	werewolfNames = werewolves.username.tolist()
+	for i, user in werewolves.iterrows():
+		socketio.emit("werewolfNames", werewolfNames, namespace="/"+user.userid)
+
+	waitUsersPrivateAck(werewolves.userid.tolist(), "werewolfAck")
+
+	socketio.emit("minionTurnStart")
+
+def waitUsersAck(userids, event):
+	waitStatus = {u: False for u in userids}
+
+	@socketio.on(event)
+	def ackRecieved(uid):
+		waitStatus[uid] = True
+
+	while not all(waitStatus.values()):
+		time.sleep(0.1)
+
+def waitUsersPrivateAck(userids, event):
+	waitStatus = {u: False for u in userids}
+
+	for uid in userids:
+		@socketio.on(event, namespace="/"+uid)
+		def ackRecieved(*args):
+			waitStatus[uid] = True
+
+	while not all(waitStatus.values()):
+		time.sleep(0.1)
+
+def waitUsersCallResponse(userids, callEvent, responseEvent):
+	waitStatus = {u: False for u in userids}
+
+	@socketio.on(responseEvent)
+	def ackRecieved(uid, *args):
+		waitStatus[uid] = True
+
+	while not all(waitStatus.values()):
+		socketio.emit(callEvent)
+		time.sleep(0.1)
+
+def day(users):
 	pass
