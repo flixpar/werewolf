@@ -27,11 +27,12 @@ def night(users):
 	})
 
 	random.shuffle(roles)
-	users.role = roles[:len(users)]
+	users.startrole = roles
+	users.currentrole = users.startrole
 
 	for i, user in users.iterrows():
-		print("sending:", user.role, "to", user.userid)
-		socketio.emit("distributeRole", {"role": user.role}, namespace="/"+user.userid)
+		print("sending:", user.startrole, "to", user.userid)
+		socketio.emit("distributeRole", {"role": user.startrole}, namespace="/"+user.userid)
 
 	waitUsersAck(users.userid.tolist(), "ready")
 
@@ -39,7 +40,7 @@ def night(users):
 
 	socketio.emit("werewolfTurnStart")
 
-	werewolves = users[users.role == "werewolf"]
+	werewolves = users[users.startrole == "werewolf"]
 	werewolfNames = werewolves.username.tolist()
 	for i, user in werewolves.iterrows():
 		socketio.emit("werewolfNames", werewolfNames, namespace="/"+user.userid)

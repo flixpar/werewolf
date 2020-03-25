@@ -10,7 +10,7 @@ socketio = SocketIO(app)
 
 import game
 
-users = pd.DataFrame(columns=["userid", "username", "role"])
+users = pd.DataFrame(columns=["userid", "username", "startrole", "currentrole"])
 
 @app.route("/")
 def handle_main():
