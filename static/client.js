@@ -15,9 +15,10 @@ var playerSocket = io("/".concat(userid));
 
 generalSocket.on("serverReady", _ => {
 	if (!sentLoaded) {
-		generalSocket.emit("loaded", userid);
+		playerSocket.emit("loaded");
 		sentLoaded = true;
 	}
+	console.log("sent loaded");
 });
 
 generalSocket.on("gameinfo", gameinfoResponse => {
@@ -40,7 +41,7 @@ playerSocket.on("distributeRole", roleResponse => {
 	readyButton.id = "ready-button";
 	readyButton.innerHTML = "Ready";
 	readyButton.onclick = _ => {
-		generalSocket.emit("ready", userid);
+		playerSocket.emit("ready");
 	};
 	mainArea.appendChild(readyButton);
 });
@@ -91,7 +92,7 @@ playerSocket.on("werewolfNames", names => {
 	readyButton.id = "werewolf-ready-button";
 	readyButton.innerHTML = "Continue";
 	readyButton.onclick = _ => {
-		playerSocket.emit("werewolfAck", userid);
+		playerSocket.emit("werewolfAck");
 	};
 	mainArea.appendChild(readyButton);
 });

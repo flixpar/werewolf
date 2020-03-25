@@ -1,6 +1,7 @@
 import random
 import time
 import pandas as pd
+from functools import partial
 
 from server import socketio
 
@@ -15,9 +16,9 @@ def play(users):
 	day(users)
 
 def night(users):
-	print("night")
+	print("Night phase")
 
-	waitUsersCallResponse(users.userid.tolist(), "serverReady", "loaded")
+	waitUsersAck(users.userid.tolist(), "loaded", "serverReady")
 
 	socketio.emit("gameinfo", {
 		"nusers": nusers,
@@ -43,41 +44,23 @@ def night(users):
 	for i, user in werewolves.iterrows():
 		socketio.emit("werewolfNames", werewolfNames, namespace="/"+user.userid)
 
-	waitUsersPrivateAck(werewolves.userid.tolist(), "werewolfAck")
+	waitUsersAck(werewolves.userid.tolist(), "werewolfAck")
 
 	socketio.emit("minionTurnStart")
 
-def waitUsersAck(userids, event):
-	waitStatus = {u: False for u in userids}
+def day(users):
+	print("Day phase")
 
-	@socketio.on(event)
-	def ackRecieved(uid):
-		waitStatus[uid] = True
 
-	while not all(waitStatus.values()):
-		time.sleep(0.1)
-
-def waitUsersPrivateAck(userids, event):
+def waitUsersAck(userids, responseEvent, callEvent=None):
 	waitStatus = {u: False for u in userids}
 
 	for uid in userids:
-		@socketio.on(event, namespace="/"+uid)
-		def ackRecieved(*args):
-			waitStatus[uid] = True
+		def ackRecieved(u, *args):
+			waitStatus[u] = True
+		socketio.on_event(responseEvent, partial(ackRecieved, uid), namespace="/"+uid)
 
 	while not all(waitStatus.values()):
+		if callEvent is not None:
+			socketio.emit(callEvent)
 		time.sleep(0.1)
-
-def waitUsersCallResponse(userids, callEvent, responseEvent):
-	waitStatus = {u: False for u in userids}
-
-	@socketio.on(responseEvent)
-	def ackRecieved(uid, *args):
-		waitStatus[uid] = True
-
-	while not all(waitStatus.values()):
-		socketio.emit(callEvent)
-		time.sleep(0.1)
-
-def day(users):
-	pass
