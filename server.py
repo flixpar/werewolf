@@ -1,5 +1,5 @@
 from flask import Flask
-from flask import render_template, redirect, request
+from flask import render_template, redirect, request, abort
 from flask_socketio import SocketIO
 
 import uuid
@@ -38,6 +38,7 @@ def handle_sart():
 
 @app.route("/game/<userid>")
 def handle_game_page(userid):
+	if len(users[users.userid == userid]) != 1: abort(404)
 	user = users[users.userid == userid].iloc[0]
 	return render_template("game.html", username=user.username, userid=user.userid)
 
