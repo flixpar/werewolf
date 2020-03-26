@@ -69,6 +69,25 @@ function turnStart(turnRole, turnInstruction) {
 	turnInfoElement.id = "turn-info-message";
 	turnInfoElement.innerHTML = message;
 	mainArea.appendChild(turnInfoElement);
+
+	var turnTimer = document.createElement("p");
+	turnTimer.id = "turn-timer";
+	mainArea.appendChild(turnTimer);
+
+	var endTime = new Date();
+	endTime.setSeconds(endTime.getSeconds() + gameinfo.turntime);
+	var countdown = setInterval(function() {
+		var now = new Date().getTime();
+		var distance = endTime - now;
+		var seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+		turnTimer.innerHTML = "Time left: " + seconds + "s";
+
+		if (distance < 0) {
+			clearInterval(countdown);
+			turnTimer.remove();
+		}
+	}, 250);
 }
 
 function createReadyButton(eventName, buttonText="Continue") {

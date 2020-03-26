@@ -25,6 +25,7 @@ def night(users, config):
 		"nusers": config["nusers"],
 		"usernames": users.username.tolist(),
 		"roles": roles,
+		"turntime": config["turntime"],
 		"daytime": config["daytime"],
 	})
 
@@ -52,7 +53,7 @@ def night(users, config):
 		for i, user in werewolves.iterrows():
 			socketio.emit("werewolfNames", werewolfNames, namespace="/"+user.userid)
 
-	else:
+	elif len(werewolfNames) == 1:
 		loneWerewolf = users[users.startrole == "werewolf"].iloc[0]
 		socketio.emit("loneWerewolf", namespace="/"+loneWerewolf.userid)
 
@@ -61,19 +62,16 @@ def night(users, config):
 			r = config["centerRoles"][int(idx)-1]
 			socketio.emit("loneWerewolfResponse", [idx, r], namespace="/"+loneWerewolf.userid)
 
-	if not werewolfNames:
-		time.sleep(random.uniform(3.0, 6.0))
-
-	waitUsersAck(werewolves.userid.tolist(), "werewolfAck")
+	socketio.sleep(config["turntime"])
 
 	socketio.emit("minionTurnStart")
 
 	if any(users.startrole == "minion"):
 		minion = users[users.startrole == "minion"].iloc[0]
 		socketio.emit("minionNames", werewolfNames, namespace="/"+minion.userid)
-		waitUsersAck((minion.userid,), "minionAck")
-	elif "minion" in roles:
-		time.sleep(random.uniform(3.0, 6.0))
+	
+	if "minion" in roles:
+		socketio.sleep(config["turntime"])
 
 	socketio.emit("seerTurnStart")
 
@@ -91,10 +89,8 @@ def night(users, config):
 					response[name] = u.currentrole
 			socketio.emit("seerResponse", response, namespace="/"+seer.userid)
 
-		waitUsersAck((seer.userid,), "seerAck")
-
-	elif "seer" in roles:
-		time.sleep(random.uniform(3.0, 6.0))
+	if "seer" in roles:
+		socketio.sleep(config["turntime"])
 
 	socketio.emit("robberTurnStart")
 
@@ -109,10 +105,8 @@ def night(users, config):
 			users.loc[users.username == name, "currentrole"] = oldrole
 			socketio.emit("robberResponse", newrole, namespace="/"+robber.userid)
 
-		waitUsersAck((robber.userid,), "robberAck")
-
-	elif "robber" in roles:
-		time.sleep(random.uniform(3.0, 6.0))
+	if "robber" in roles:
+		socketio.sleep(config["turntime"])
 
 	socketio.emit("drunkTurnStart")
 
@@ -124,19 +118,19 @@ def night(users, config):
 			oldrole = users[users.startrole == "drunk"].iloc[0].currentrole
 			newrole = config["centerRoles"][int(idx)-1]
 			users.loc[users.startrole == "drunk", "currentrole"] = newrole
-			centerRoles[int(idx)-1] = oldrole
+			config["centerRoles"][int(idx)-1] = oldrole
 
-	elif "drunk" in roles:
-		time.sleep(random.uniform(3.0, 6.0))
+	if "drunk" in roles:
+		socketio.sleep(config["turntime"])
 
 	socketio.emit("insomniacTurnStart")
 
 	if any(users.startrole == "insomniac"):
 		insomniac = users[users.startrole == "insomniac"].iloc[0]
 		socketio.emit("insomniacRole", insomniac.currentrole, namespace="/"+insomniac.userid)
-		waitUsersAck((insomniac.userid,), "insomniacAck")
-	elif "insomniac" in roles:
-		time.sleep(random.uniform(3.0, 6.0))
+
+	if "insomniac" in roles:
+		socketio.sleep(config["turntime"])
 
 	return users, config
 

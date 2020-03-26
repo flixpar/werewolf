@@ -46,6 +46,7 @@ def setRules():
 	reset()
 
 	nplayers = int(request.form["nplayers"])
+	turntime = int(request.form["turntime"])
 	daytime = int(request.form["daytime"][0]) * 60
 
 	roles = []
@@ -56,6 +57,7 @@ def setRules():
 	rules = {
 		"nusers": nplayers,
 		"roles": roles,
+		"turntime": turntime,
 		"daytime": daytime
 	}
 
