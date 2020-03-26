@@ -1,6 +1,7 @@
 console.log("Client started");
 
 var sentLoaded = false;
+var hasVoted = false;
 
 var role;
 var gameinfo;
@@ -283,4 +284,141 @@ playerSocket.on("insomniacRole", newRole => {
 	mainArea.appendChild(newRoleElement);
 
 	createReadyButton("insomniacAck");
+});
+
+generalSocket.on("startDay", _ => {
+	console.log("day");
+	mainArea.innerHTML = "";
+
+	var timer = document.createElement("p");
+	timer.id = "timer";
+	mainArea.appendChild(timer);
+
+	var el1 = document.createElement("p");
+	el1.innerHTML = "Vote:";
+	mainArea.appendChild(el1);
+
+	var voteSelect = document.createElement("select");
+	voteSelect.id = "vote-select";
+	mainArea.appendChild(voteSelect);
+	gameinfo.usernames.forEach(name => {
+		var option = document.createElement("option");
+		option.innerHTML = name;
+		voteSelect.appendChild(option);
+	});
+
+	var voteButton = document.createElement("button");
+	voteButton.id = "vote-button";
+	voteButton.innerHTML = "Vote";
+	voteButton.onclick = _ => {
+		console.log("Voting for: ".concat(voteSelect.value));
+		playerSocket.emit("vote", voteSelect.value);
+
+		voteSelect.remove();
+		voteButton.remove();
+		hasVoted = true;
+	};
+	mainArea.appendChild(voteButton);
+
+	var endTime = new Date();
+	endTime.setSeconds(endTime.getSeconds() + gameinfo.daytime);
+	var countdown = setInterval(function() {
+		var now = new Date().getTime();
+		var distance = endTime - now;
+
+		var minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+		var seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+		document.getElementById("timer").innerHTML = "Time left: " + minutes + "m " + seconds + "s ";
+
+		if (distance < 0) {
+			clearInterval(countdown);
+			document.getElementById("timer").remove();
+			if (!hasVoted) {
+				console.log("no vote");
+				playerSocket.emit("vote", "none");
+				voteSelect.remove();
+				voteButton.remove();
+				hasVoted = true;
+			}
+		}
+	}, 250);
+});
+
+generalSocket.on("gameover", gameOverInfo => {
+
+	console.log("game over!");
+	console.log(gameOverInfo);
+
+	var winStatusElement = document.createElement("p");
+	winStatusElement.id = "win-status";
+	mainArea.appendChild(winStatusElement);
+
+	var message = "";
+
+	if (gameOverInfo.winningTeam == "werewolf") {
+		message += "Werewolf team wins!<br>";
+	} else {
+		message += "Villager team wins!<br>"
+	}
+
+	var finalRole = gameOverInfo.finalRoles[username];
+	message += "Your role was: ".concat(finalRole, "<br>");
+
+	if (gameOverInfo.winningTeam == "werewolf") {
+		switch (finalRole) {
+			case "werewolf":
+				message += "You won!";
+				break;
+			case "minion":
+					message += "You won!";
+					break;
+			default:
+				message += "You lost.";
+				break;
+		}
+	} else {
+		switch (finalRole) {
+			case "werewolf":
+				message += "You lost.";
+				break;
+			case "minion":
+					message += "You lost.";
+					break;
+			default:
+				message += "You won!";
+				break;
+		}
+	}
+
+	winStatusElement.innerHTML = message;
+
+	var tableTitle = document.createElement("p");
+	tableTitle.id = "roles-table-title";
+	tableTitle.innerHTML = "Final Roles";
+	mainArea.appendChild(tableTitle);
+
+	var finalRolesTable = document.createElement("table");
+	finalRolesTable.id = "final-roles-table";
+	mainArea.appendChild(finalRolesTable);
+
+	var header = document.createElement("tr");
+	finalRolesTable.appendChild(header);
+	nameHeader = document.createElement("th");
+	roleHeader = document.createElement("th");
+	nameHeader.innerHTML = "Name";
+	roleHeader.innerHTML = "Role";
+	header.appendChild(nameHeader);
+	header.appendChild(roleHeader);
+
+	for (const name in gameOverInfo.finalRoles) {
+		var row = document.createElement("tr");
+		var nameElement = document.createElement("td");
+		var roleElement = document.createElement("td");
+		nameElement.innerHTML = name;
+		roleElement.innerHTML = gameOverInfo.finalRoles[name];
+		row.appendChild(nameElement);
+		row.appendChild(roleElement);
+		finalRolesTable.appendChild(row);
+	}
 });

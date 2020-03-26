@@ -28,12 +28,15 @@ def night(users):
 	socketio.emit("gameinfo", {
 		"nusers": nusers,
 		"usernames": users.username.tolist(),
-		"roles": roles
+		"roles": roles,
+		"daytime": 60,
 	})
 
 	random.shuffle(roles)
 	users.startrole = roles[:-3]
 	users.currentrole = roles[:-3]
+
+	global centerRoles
 	centerRoles = roles[-3:]
 
 	for i, user in users.iterrows():
@@ -114,6 +117,36 @@ def night(users):
 
 def day(users):
 	print("Day phase")
+	socketio.emit("startDay")
+
+	votes = {u: False for u in users.userid.tolist()}
+	for uid in users.userid.tolist():
+		def voteRecieved(u, vote, *args):
+			votes[u] = vote
+		socketio.on_event("vote", partial(voteRecieved, uid), namespace="/"+uid)
+	while not all(votes.values()):
+		time.sleep(0.1)
+
+	votes = list(votes.values())
+	print("votes:", votes)
+	maxNumVotes = max([votes.count(v) for v in votes])
+	killed = [v for v in votes if votes.count(v) == maxNumVotes]
+
+	werewolvesWin = True
+	for name in killed:
+		u = users[users.username == name].iloc[0]
+		if u.currentrole == "werewolf":
+			werewolvesWin = False
+
+	finalRoles = {user.username: user.currentrole for _, user in users.iterrows()}
+	for i, r in enumerate(centerRoles):
+		finalRoles[str(i+1)] = r
+
+	gameOverInfo = {
+		"finalRoles": finalRoles,
+		"winningTeam": "werewolf" if werewolvesWin else "villager",
+	}
+	socketio.emit("gameover", gameOverInfo)
 
 
 def waitUsersAck(userids, responseEvent, callEvent=None):
