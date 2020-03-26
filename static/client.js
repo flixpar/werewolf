@@ -329,11 +329,11 @@ generalSocket.on("startDay", _ => {
 		var minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
 		var seconds = Math.floor((distance % (1000 * 60)) / 1000);
 
-		document.getElementById("timer").innerHTML = "Time left: " + minutes + "m " + seconds + "s ";
+		timer.innerHTML = "Time left: " + minutes + "m " + seconds + "s ";
 
 		if (distance < 0) {
 			clearInterval(countdown);
-			document.getElementById("timer").remove();
+			timer.remove();
 			if (!hasVoted) {
 				console.log("no vote");
 				playerSocket.emit("vote", "none");
@@ -349,6 +349,10 @@ generalSocket.on("gameover", gameOverInfo => {
 
 	console.log("game over!");
 	console.log(gameOverInfo);
+
+	if (document.getElementById("timer") != null) {
+		document.getElementById("timer").remove();
+	}
 
 	var winStatusElement = document.createElement("p");
 	winStatusElement.id = "win-status";

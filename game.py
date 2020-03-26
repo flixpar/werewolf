@@ -54,6 +54,9 @@ def night(users):
 	for i, user in werewolves.iterrows():
 		socketio.emit("werewolfNames", werewolfNames, namespace="/"+user.userid)
 
+	if not werewolfNames:
+		time.sleep(random.uniform(3.0, 6.0))
+
 	waitUsersAck(werewolves.userid.tolist(), "werewolfAck")
 
 	socketio.emit("minionTurnStart")
@@ -62,6 +65,8 @@ def night(users):
 		minion = users[users.startrole == "minion"].iloc[0]
 		socketio.emit("minionNames", werewolfNames, namespace="/"+minion.userid)
 		waitUsersAck((minion.userid,), "minionAck")
+	elif "minion" in roles:
+		time.sleep(random.uniform(3.0, 6.0))
 
 	socketio.emit("seerTurnStart")
 
@@ -78,6 +83,9 @@ def night(users):
 			socketio.emit("seerResponse", response, namespace="/"+seer.userid)
 
 		waitUsersAck((seer.userid,), "seerAck")
+
+	elif "seer" in roles:
+		time.sleep(random.uniform(3.0, 6.0))
 
 	socketio.emit("robberTurnStart")
 
@@ -96,6 +104,9 @@ def night(users):
 
 		waitUsersAck((robber.userid,), "robberAck")
 
+	elif "robber" in roles:
+		time.sleep(random.uniform(3.0, 6.0))
+
 	socketio.emit("drunkTurnStart")
 
 	if any(users.startrole == "drunk"):
@@ -108,12 +119,17 @@ def night(users):
 			users.loc[users.startrole == "drunk", "currentrole"] = newrole
 			centerRoles[int(idx)-1] = oldrole
 
+	elif "drunk" in roles:
+		time.sleep(random.uniform(3.0, 6.0))
+
 	socketio.emit("insomniacTurnStart")
 
 	if any(users.startrole == "insomniac"):
 		insomniac = users[users.startrole == "insomniac"].iloc[0]
 		socketio.emit("insomniacRole", insomniac.currentrole, namespace="/"+insomniac.userid)
 		waitUsersAck((insomniac.userid,), "insomniacAck")
+	elif "insomniac" in roles:
+		time.sleep(random.uniform(3.0, 6.0))
 
 def day(users):
 	print("Day phase")
