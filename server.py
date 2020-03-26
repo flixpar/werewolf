@@ -10,15 +10,16 @@ socketio = SocketIO(app)
 
 import game
 
-rulesSet = False
+rules = None
 users = pd.DataFrame(columns=["userid", "username", "startrole", "currentrole"])
 
 @app.route("/")
 def handle_main():
-	if rulesSet:
-		return render_template("index.html")
-	else:
+	print(rules)
+	if rules is None:
 		return render_template("rules.html")
+	else:
+		return render_template("index.html")
 
 @app.route("/start", methods=["POST",])
 def handle_sart():
@@ -30,8 +31,8 @@ def handle_sart():
 	global users
 	users = users.append(user, ignore_index=True)
 
-	if len(users) == game.nusers:
-		socketio.start_background_task(game.play, users)
+	if len(users) == rules["nusers"]:
+		socketio.start_background_task(game.play, users, rules)
 
 	return redirect("/game/" + user["userid"])
 
@@ -41,16 +42,23 @@ def handle_game_page(userid):
 	return render_template("game.html", name=user.username, userid=user.userid)
 
 @app.route("/rules", methods=["POST",])
-def rules():
-	global rulesSet
+def setRules():
 	reset()
+
 	nplayers = int(request.form["nplayers"])
+	daytime = int(request.form["daytime"][0]) * 60
+
 	roles = []
 	for i in range(nplayers+3):
 		roles.append(request.form[f"role-select-{i+1}"])
-	daytime = int(request.form["daytime"][0]) * 60
-	game.setConfig(roles, daytime)
-	rulesSet = True
+
+	global rules
+	rules = {
+		"nusers": nplayers,
+		"roles": roles,
+		"daytime": daytime
+	}
+
 	return redirect("/")
 
 @app.route("/reset", methods=["POST", "GET"])
@@ -61,10 +69,9 @@ def resetHandler():
 	return redirect("/")
 
 def reset():
-	global users, rulesSet
-	rulesSet = False
+	global users, rules
+	rules = None
 	users = pd.DataFrame(columns=["userid", "username", "startrole", "currentrole"])
-	game.reset()
 
 if __name__ == "__main__":
 	socketio.run(app)

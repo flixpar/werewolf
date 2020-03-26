@@ -7,49 +7,32 @@ from functools import partial
 from server import socketio
 
 running = False
-roles = None
-nusers = None
-centerRoles = None
-daytime = None
 
-def reset():
-	global roles, nusers, centerRoles, daytime
-	roles = None
-	nusers = None
-	centerRoles = None
-	daytime = None
-
-def setConfig(r, d):
-	global roles, nusers, centerRoles, daytime
-	roles = r
-	nusers = len(r)-3
-	centerRoles = None
-	daytime = d
-
-def play(users):
+def play(users, config):
 	global running
 	running = True
-	night(users)
-	day(users)
 
-def night(users):
+	users, config = night(users, config)
+	day(users, config)
+
+def night(users, config):
 	print("Night phase")
 
 	waitUsersAck(users.userid.tolist(), "loaded", "serverReady")
 
+	roles = config["roles"]
 	socketio.emit("gameinfo", {
-		"nusers": nusers,
+		"nusers": config["nusers"],
 		"usernames": users.username.tolist(),
 		"roles": roles,
-		"daytime": daytime,
+		"daytime": config["daytime"],
 	})
 
 	random.shuffle(roles)
 	users.startrole = roles[:-3]
 	users.currentrole = roles[:-3]
 
-	global centerRoles
-	centerRoles = roles[-3:]
+	config["centerRoles"] = roles[-3:]
 
 	for i, user in users.iterrows():
 		print("sending:", user.startrole, "to", user.userid)
@@ -127,7 +110,7 @@ def night(users):
 		@socketio.on("drunkRequest", namespace="/"+drunk.userid)
 		def drunkRequest(idx, *args):
 			oldrole = users[users.startrole == "drunk"].iloc[0].currentrole
-			newrole = centerRoles[int(idx)-1]
+			newrole = config["centerRoles"][int(idx)-1]
 			users.loc[users.startrole == "drunk", "currentrole"] = newrole
 			centerRoles[int(idx)-1] = oldrole
 
@@ -143,7 +126,9 @@ def night(users):
 	elif "insomniac" in roles:
 		time.sleep(random.uniform(3.0, 6.0))
 
-def day(users):
+	return users, config
+
+def day(users, config):
 	print("Day phase")
 	socketio.emit("startDay")
 
@@ -167,7 +152,7 @@ def day(users):
 			werewolvesWin = False
 
 	finalRoles = {user.username: user.currentrole for _, user in users.iterrows()}
-	for i, r in enumerate(centerRoles):
+	for i, r in enumerate(config["centerRoles"]):
 		finalRoles[str(i+1)] = r
 
 	gameOverInfo = {
