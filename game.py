@@ -73,8 +73,11 @@ def night(users, config):
 		def seerRequest(names, *args):
 			response = {}
 			for name in names:
-				u = users[users.username == name].iloc[0]
-				response[name] = u.currentrole
+				if name in ["1", "2", "3"]:
+					response[name] = config["centerRoles"][int(name)-1]
+				else:
+					u = users[users.username == name].iloc[0]
+					response[name] = u.currentrole
 			socketio.emit("seerResponse", response, namespace="/"+seer.userid)
 
 		waitUsersAck((seer.userid,), "seerAck")

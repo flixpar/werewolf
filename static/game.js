@@ -132,15 +132,31 @@ generalSocket.on("seerTurnStart", _ => {
 });
 
 function seerRequest() {
-	var seerSelect = document.createElement("select");
-	seerSelect.id = "seer-select";
-	mainArea.appendChild(seerSelect);
 
-	gameinfo.usernames.forEach(name => {
-		if (name != username) {
-			var option = document.createElement("option");
-			option.innerHTML = name;
-			seerSelect.appendChild(option);
+	var seerModeSelect = makeSelect("seer-mode-select", ["Player", "Middle"]);
+	mainArea.appendChild(seerModeSelect);
+
+	var seerSelectDiv = document.createElement("div");
+	mainArea.appendChild(seerSelectDiv);
+
+	var playerOptions = gameinfo.usernames.filter(u => {return u != username});
+	var seerSelect1, seerSelect2;
+	var seerSelect = makeSelect("seer-select", playerOptions);
+	seerSelectDiv.appendChild(seerSelect);
+
+	seerModeSelect.addEventListener("change", _ => {
+		if (seerSelect != null)  {seerSelect.remove();}
+		if (seerSelect1 != null) {seerSelect1.remove();}
+		if (seerSelect2 != null) {seerSelect2.remove();}
+
+		if (seerModeSelect.value == "Player") {
+			seerSelect = makeSelect("seer-select", playerOptions);
+			seerSelectDiv.appendChild(seerSelect);
+		} else {
+			seerSelect1 = makeSelect("seer-select-1", ["1", "2", "3"]);
+			seerSelect2 = makeSelect("seer-select-2", ["1", "2", "3"]);
+			seerSelectDiv.appendChild(seerSelect1);
+			seerSelectDiv.appendChild(seerSelect2);
 		}
 	});
 
@@ -148,10 +164,19 @@ function seerRequest() {
 	seerRequestButton.id = "seer-request-button";
 	seerRequestButton.innerHTML = "Check role";
 	seerRequestButton.onclick = _ => {
-		console.log("Checking: ".concat(seerSelect.value));
-		playerSocket.emit("seerRequest", [seerSelect.value,]);
+		var selected;
+		if (seerModeSelect.value == "Player") {
+			selected = [seerSelect.value,]
+		} else {
+			selected = [seerSelect1.value, seerSelect2.value]
+		}
+		playerSocket.emit("seerRequest", selected);
+		console.log("Checking: ".concat(selected));
 
-		seerSelect.remove();
+		seerModeSelect.remove();
+		if (seerSelect != null)  {seerSelect.remove();}
+		if (seerSelect1 != null) {seerSelect1.remove();}
+		if (seerSelect2 != null) {seerSelect2.remove();}
 		seerRequestButton.remove();
 	};
 	mainArea.appendChild(seerRequestButton);
@@ -336,8 +361,8 @@ generalSocket.on("startDay", _ => {
 			clearInterval(countdown);
 			timer.remove();
 			if (!hasVoted) {
-				console.log("no vote");
-				playerSocket.emit("vote", "none");
+				console.log("no vote -> self-vote");
+				playerSocket.emit("vote", username);
 				voteSelect.remove();
 				voteButton.remove();
 				el1.remove();
@@ -446,4 +471,18 @@ function wonGame(finalRole, winningTeam) {
 				return true;
 		}
 	}
+}
+
+function makeSelect(name, options) {
+	var selectElement = document.createElement("select");
+	selectElement.id = name;
+
+	options.forEach(optionName => {
+		var option = document.createElement("option");
+		option.value = optionName;
+		option.innerHTML = optionName;
+		selectElement.appendChild(option);
+	});
+
+	return selectElement;
 }
