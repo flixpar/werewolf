@@ -10,11 +10,15 @@ socketio = SocketIO(app)
 
 import game
 
+rulesSet = False
 users = pd.DataFrame(columns=["userid", "username", "startrole", "currentrole"])
 
 @app.route("/")
 def handle_main():
-	return render_template("index.html")
+	if rulesSet:
+		return render_template("index.html")
+	else:
+		return render_template("rules.html")
 
 @app.route("/start", methods=["POST",])
 def handle_sart():
@@ -36,9 +40,31 @@ def handle_game_page(userid):
 	user = users[users.userid == userid].iloc[0]
 	return render_template("game.html", name=user.username, userid=user.userid)
 
-@app.route("/reset", methods=["POST",])
-def reset():
+@app.route("/rules", methods=["POST",])
+def rules():
+	global rulesSet
+	reset()
+	nplayers = int(request.form["nplayers"])
+	roles = []
+	for i in range(nplayers+3):
+		roles.append(request.form[f"role-select-{i+1}"])
+	daytime = int(request.form["daytime"][0]) * 60
+	game.setConfig(roles, daytime)
+	rulesSet = True
 	return redirect("/")
+
+@app.route("/reset", methods=["POST", "GET"])
+def resetHandler():
+	if game.running:
+		reset()
+		game.running = False
+	return redirect("/")
+
+def reset():
+	global users, rulesSet
+	rulesSet = False
+	users = pd.DataFrame(columns=["userid", "username", "startrole", "currentrole"])
+	game.reset()
 
 if __name__ == "__main__":
 	socketio.run(app)

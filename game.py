@@ -6,17 +6,29 @@ from functools import partial
 
 from server import socketio
 
-roles = [
-	"werewolf",
-	"minion",
-	"seer",
-	"robber",
-	"insomniac",
-]
-nusers = len(roles) - 3
+running = False
+roles = None
+nusers = None
 centerRoles = None
+daytime = None
+
+def reset():
+	global roles, nusers, centerRoles, daytime
+	roles = None
+	nusers = None
+	centerRoles = None
+	daytime = None
+
+def setConfig(r, d):
+	global roles, nusers, centerRoles, daytime
+	roles = r
+	nusers = len(r)-3
+	centerRoles = None
+	daytime = d
 
 def play(users):
+	global running
+	running = True
 	night(users)
 	day(users)
 
@@ -29,7 +41,7 @@ def night(users):
 		"nusers": nusers,
 		"usernames": users.username.tolist(),
 		"roles": roles,
-		"daytime": 60,
+		"daytime": daytime,
 	})
 
 	random.shuffle(roles)

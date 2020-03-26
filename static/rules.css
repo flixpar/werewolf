@@ -1,0 +1,13 @@
+body {
+	font-family: Arial, Helvetica, sans-serif;
+}
+
+.role-select-container > p {
+	display: inline;
+	margin-right: 5px;
+}
+
+#role-select-area {
+	margin-top: 10px;
+	margin-bottom: 10px;
+}

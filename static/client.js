@@ -316,6 +316,7 @@ generalSocket.on("startDay", _ => {
 
 		voteSelect.remove();
 		voteButton.remove();
+		el1.remove();
 		hasVoted = true;
 	};
 	mainArea.appendChild(voteButton);
@@ -339,6 +340,7 @@ generalSocket.on("startDay", _ => {
 				playerSocket.emit("vote", "none");
 				voteSelect.remove();
 				voteButton.remove();
+				el1.remove();
 				hasVoted = true;
 			}
 		}
@@ -425,4 +427,15 @@ generalSocket.on("gameover", gameOverInfo => {
 		row.appendChild(roleElement);
 		finalRolesTable.appendChild(row);
 	}
+
+	var resetForm = document.createElement("form");
+	resetForm.action = "/reset";
+	resetForm.method = "POST";
+	mainArea.appendChild(resetForm);
+
+	var resetButton = document.createElement("button");
+	resetButton.name = "submit";
+	resetButton.innerHTML = "New Game";
+	resetForm.appendChild(resetButton);
+
 });

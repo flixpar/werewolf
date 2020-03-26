@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Werewolf</title>
+		<link rel="stylesheet" href="{{ url_for('static', filename='rules.css') }}">
+	</head>
+	<body>
+		<h1>Werewolf</h1>
+		<form action="/rules" method="POST">
+			
+			<label>Players:</label>
+			<select id="nplayers" name="nplayers">
+				<option>4</option>
+				<option>5</option>
+				<option>6</option>
+				<option>7</option>
+				<option>8</option>
+			</select>
+
+			<div id="role-select-area"></div>
+
+			<label>Day time:</label>
+			<select id="daytime" name="daytime">
+				<option>1 minute</option>
+				<option>2 minutes</option>
+				<option>3 minutes</option>
+				<option>4 minutes</option>
+				<option>5 minutes</option>
+				<option>6 minutes</option>
+				<option>7 minutes</option>
+				<option>8 minutes</option>
+			</select>
+			<br><br>
+
+			<input type="submit" name="submit" id="submit-button" value="Submit">
+		</form>
+
+		<script src="{{ url_for('static', filename='rules.js') }}"></script>
+	</body>
+</html>
