@@ -33,6 +33,7 @@ def night(users, config):
 	users.currentrole = roles[:-3]
 
 	config["centerRoles"] = roles[-3:]
+	config["startCenterRoles"] = roles[-3:]
 
 	for i, user in users.iterrows():
 		print("sending role:", user.startrole, "to", user.userid)
@@ -148,11 +149,16 @@ def day(users, config):
 		if u.currentrole == "werewolf":
 			werewolvesWin = False
 
+	startRoles = {user.username: user.startrole for _, user in users.iterrows()}
+	for i, r in enumerate(config["startCenterRoles"]):
+		startRoles[str(i+1)] = r
+
 	finalRoles = {user.username: user.currentrole for _, user in users.iterrows()}
 	for i, r in enumerate(config["centerRoles"]):
 		finalRoles[str(i+1)] = r
 
 	gameOverInfo = {
+		"startRoles": startRoles,
 		"finalRoles": finalRoles,
 		"winningTeam": "werewolf" if werewolvesWin else "villager",
 	}

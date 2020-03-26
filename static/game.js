@@ -356,46 +356,16 @@ generalSocket.on("gameover", gameOverInfo => {
 		document.getElementById("timer").remove();
 	}
 
+	var finalRole = gameOverInfo.finalRoles[username];
+
 	var winStatusElement = document.createElement("p");
 	winStatusElement.id = "win-status";
 	mainArea.appendChild(winStatusElement);
 
 	var message = "";
-
-	if (gameOverInfo.winningTeam == "werewolf") {
-		message += "Werewolf team wins!<br>";
-	} else {
-		message += "Villager team wins!<br>"
-	}
-
-	var finalRole = gameOverInfo.finalRoles[username];
+	message += (gameOverInfo.winningTeam == "werewolf") ? "Werewolf team wins!<br>" : "Villager team wins!<br>";
 	message += "Your role was: ".concat(finalRole, "<br>");
-
-	if (gameOverInfo.winningTeam == "werewolf") {
-		switch (finalRole) {
-			case "werewolf":
-				message += "You won!";
-				break;
-			case "minion":
-					message += "You won!";
-					break;
-			default:
-				message += "You lost.";
-				break;
-		}
-	} else {
-		switch (finalRole) {
-			case "werewolf":
-				message += "You lost.";
-				break;
-			case "minion":
-					message += "You lost.";
-					break;
-			default:
-				message += "You won!";
-				break;
-		}
-	}
+	message += wonGame(finalRole, gameOverInfo.winningTeam) ? "You won!" : "You lost.";
 
 	winStatusElement.innerHTML = message;
 
@@ -411,20 +381,36 @@ generalSocket.on("gameover", gameOverInfo => {
 	var header = document.createElement("tr");
 	finalRolesTable.appendChild(header);
 	nameHeader = document.createElement("th");
-	roleHeader = document.createElement("th");
+	startRoleHeader = document.createElement("th");
+	finalRoleHeader = document.createElement("th");
+	wonHeader = document.createElement("th");
 	nameHeader.innerHTML = "Name";
-	roleHeader.innerHTML = "Role";
+	startRoleHeader.innerHTML = "Start Role";
+	finalRoleHeader.innerHTML = "End Role";
+	wonHeader.innerHTML = "Won?";
 	header.appendChild(nameHeader);
-	header.appendChild(roleHeader);
+	header.appendChild(startRoleHeader);
+	header.appendChild(finalRoleHeader);
+	header.appendChild(wonHeader);
 
 	for (const name in gameOverInfo.finalRoles) {
 		var row = document.createElement("tr");
+
 		var nameElement = document.createElement("td");
-		var roleElement = document.createElement("td");
+		var startRoleElement = document.createElement("td");
+		var finalRoleElement = document.createElement("td");
+		var wonElement = document.createElement("td");
+
 		nameElement.innerHTML = name;
-		roleElement.innerHTML = gameOverInfo.finalRoles[name];
+		startRoleElement.innerHTML = gameOverInfo.finalRoles[name];
+		finalRoleElement.innerHTML = gameOverInfo.startRoles[name];
+		wonElement.innerHTML = wonGame(gameOverInfo.finalRoles[name], gameOverInfo.winningTeam) ? "True" : "False";
+
 		row.appendChild(nameElement);
-		row.appendChild(roleElement);
+		row.appendChild(startRoleElement);
+		row.appendChild(finalRoleElement);
+		row.appendChild(wonElement);
+
 		finalRolesTable.appendChild(row);
 	}
 
@@ -439,3 +425,25 @@ generalSocket.on("gameover", gameOverInfo => {
 	resetForm.appendChild(resetButton);
 
 });
+
+function wonGame(finalRole, winningTeam) {
+	if (winningTeam == "werewolf") {
+		switch (finalRole) {
+			case "werewolf":
+				return true;
+			case "minion":
+				return true;
+			default:
+				return false;
+		}
+	} else {
+		switch (finalRole) {
+			case "werewolf":
+				return false;
+			case "minion":
+				return false;
+			default:
+				return true;
+		}
+	}
+}

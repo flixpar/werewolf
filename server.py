@@ -39,7 +39,7 @@ def handle_sart():
 @app.route("/game/<userid>")
 def handle_game_page(userid):
 	user = users[users.userid == userid].iloc[0]
-	return render_template("game.html", name=user.username, userid=user.userid)
+	return render_template("game.html", username=user.username, userid=user.userid)
 
 @app.route("/rules", methods=["POST",])
 def setRules():
