@@ -19,7 +19,7 @@ def handle_main():
 	if rules is None:
 		return render_template("rules.html")
 	else:
-		return render_template("index.html")
+		return render_template("start.html")
 
 @app.route("/start", methods=["POST",])
 def handle_sart():

@@ -35,7 +35,7 @@ def night(users, config):
 	config["centerRoles"] = roles[-3:]
 
 	for i, user in users.iterrows():
-		print("sending:", user.startrole, "to", user.userid)
+		print("sending role:", user.startrole, "to", user.userid)
 		socketio.emit("distributeRole", {"role": user.startrole}, namespace="/"+user.userid)
 
 	waitUsersAck(users.userid.tolist(), "ready")
@@ -70,7 +70,6 @@ def night(users, config):
 
 		@socketio.on("seerRequest", namespace="/"+seer.userid)
 		def seerRequest(names, *args):
-			print("seer request:", names)
 			response = {}
 			for name in names:
 				u = users[users.username == name].iloc[0]
@@ -91,8 +90,6 @@ def night(users, config):
 		def robberRequest(name, *args):
 			oldrole = users[users.startrole == "robber"].iloc[0].currentrole
 			newrole = users[users.username == name].iloc[0].currentrole
-			print("robber swap:", robber.username, "with", name)
-			print("robber new role:", newrole)
 			users.loc[users.startrole == "robber", "currentrole"] = newrole
 			users.loc[users.username == name, "currentrole"] = oldrole
 			socketio.emit("robberResponse", newrole, namespace="/"+robber.userid)
