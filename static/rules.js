@@ -1,14 +1,21 @@
 var nplayersSelect = document.getElementById("nplayers");
 var prevnroles = parseInt(nplayersSelect.value)+3;
 
-var allRoles = [
+const allRoles = [
 	"werewolf",
 	"minion",
 	"seer",
 	"robber",
 	"drunk",
-	"insomniac"
+	"insomniac",
+	"villager",
 ];
+
+const defaults = {
+	4: ["werewolf", "werewolf", "minion", "seer", "robber", "drunk", "insomniac"],
+	5: ["werewolf", "werewolf", "minion", "seer", "robber", "drunk", "insomniac", "villager"],
+	6: ["werewolf", "werewolf", "minion", "seer", "robber", "drunk", "insomniac", "villager", "villager"],
+};
 
 for (var i = 1; i <= prevnroles; i++) {
 	createRoleSelect(i);
@@ -58,3 +65,13 @@ function createRoleSelect(n) {
 	});
 
 }
+
+document.getElementById("set-defaults").addEventListener("click", _ => {
+	var nplayers = parseInt(nplayersSelect.value);
+	var defaultList = defaults[nplayers];
+	if (defaultList != null) {
+		for (var i = 0; i < nplayers+3; i++) {
+			document.getElementById("role-select-".concat(i+1)).value = defaultList[i];
+		}
+	}
+});
