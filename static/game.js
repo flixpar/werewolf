@@ -103,6 +103,34 @@ playerSocket.on("werewolfNames", names => {
 	createReadyButton("werewolfAck");
 });
 
+playerSocket.on("loneWerewolf", _ => {
+	var messageElement = document.createElement("p");
+	messageElement.innerHTML = "You are a lone werewolf. You may look at one center card.";
+	mainArea.appendChild(messageElement);
+
+	var centerSelect = makeSelect("center-select", ["1", "2", "3"]);
+	mainArea.appendChild(centerSelect);
+
+	var button = document.createElement("button");
+	button.innerHTML = "Check";
+	mainArea.appendChild(button);
+	button.addEventListener("click", _ => {
+		playerSocket.emit("loneWerewolfRequest", centerSelect.value);
+		centerSelect.remove();
+		button.remove();
+	});
+});
+
+playerSocket.on("loneWerewolfResponse", response => {
+	console.log(response);
+
+	var messageElement = document.createElement("p");
+	messageElement.innerHTML = "Center card " + response[0] + " role: " + response[1];
+	mainArea.appendChild(messageElement);
+
+	createReadyButton("werewolfAck");
+});
+
 generalSocket.on("minionTurnStart", _ => {
 	turnStart("minion", "Check who the werewolves are.");
 });

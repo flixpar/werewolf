@@ -47,8 +47,19 @@ def night(users, config):
 
 	werewolves = users[users.startrole == "werewolf"]
 	werewolfNames = werewolves.username.tolist()
-	for i, user in werewolves.iterrows():
-		socketio.emit("werewolfNames", werewolfNames, namespace="/"+user.userid)
+
+	if len(werewolfNames) > 1:
+		for i, user in werewolves.iterrows():
+			socketio.emit("werewolfNames", werewolfNames, namespace="/"+user.userid)
+
+	else:
+		loneWerewolf = users[users.startrole == "werewolf"].iloc[0]
+		socketio.emit("loneWerewolf", namespace="/"+loneWerewolf.userid)
+
+		@socketio.on("loneWerewolfRequest", namespace="/"+loneWerewolf.userid)
+		def loneWerewolfRequest(idx):
+			r = config["centerRoles"][int(idx)-1]
+			socketio.emit("loneWerewolfResponse", [idx, r], namespace="/"+loneWerewolf.userid)
 
 	if not werewolfNames:
 		time.sleep(random.uniform(3.0, 6.0))
