@@ -5,20 +5,26 @@ import pandas as pd
 from functools import partial
 
 from server import socketio
+from flask import request, session
 
-running = False
+def play(users, config, roomid):
+	users, config = night(users, config, roomid)
+	day(users, config, roomid)
 
-def play(users, config):
-	global running
-	running = True
-
-	users, config = night(users, config)
-	day(users, config)
-
-def night(users, config):
+def night(users, config, roomid):
 	print("Night phase")
 
-	waitUsersAck(users.userid.tolist(), "loaded", "serverReady")
+	loadedStatus = {u: False for u in users.userid.tolist()}
+	for uid in users.userid.tolist():
+		def loadedAckHandler(u, *args):
+			if not "userid" in session: raise Exception("Authorization Error")
+			if not u == session["userid"]: raise Exception("Authorization Error")
+			loadedStatus[u] = True
+			users.loc[users.userid == u, "sid"] = request.sid
+		socketio.on_event("loaded", partial(loadedAckHandler, uid), namespace=f"/{uid}")
+	while not all(loadedStatus.values()):
+		socketio.emit("serverReady", room=roomid)
+		time.sleep(0.1)
 
 	roles = config["roles"]
 	socketio.emit("gameinfo", {
@@ -27,7 +33,8 @@ def night(users, config):
 		"roles": roles,
 		"turntime": config["turntime"],
 		"daytime": config["daytime"],
-	})
+		"roomid": roomid,
+	}, room=roomid)
 
 	random.shuffle(roles)
 	users.startrole = roles[:-3]
@@ -38,48 +45,58 @@ def night(users, config):
 
 	for i, user in users.iterrows():
 		print("sending role:", user.startrole, "to", user.userid)
-		socketio.emit("distributeRole", {"role": user.startrole}, namespace="/"+user.userid)
+		socketio.emit("distributeRole", {"role": user.startrole}, room=user.sid)
 
-	waitUsersAck(users.userid.tolist(), "ready")
+	waitStatus = {u: False for u in users.userid.tolist()}
+	for uid in users.userid.tolist():
+		def readyAckRecieved(u, *args):
+			if not "userid" in session: raise Exception("Authorization Error")
+			if not u == session["userid"]: raise Exception("Authorization Error")
+			waitStatus[u] = True
+		socketio.on_event("ready", partial(readyAckRecieved, uid), namespace=f"/{uid}")
+	while not all(waitStatus.values()):
+		time.sleep(0.1)
 
-	socketio.emit("start")
+	socketio.emit("start", room=roomid)
 
-	socketio.emit("werewolfTurnStart")
+	socketio.emit("werewolfTurnStart", room=roomid)
 
 	werewolves = users[users.startrole == "werewolf"]
 	werewolfNames = werewolves.username.tolist()
 
 	if len(werewolfNames) > 1:
 		for i, user in werewolves.iterrows():
-			socketio.emit("werewolfNames", werewolfNames, namespace="/"+user.userid)
+			socketio.emit("werewolfNames", werewolfNames, room=user.sid)
 
 	elif len(werewolfNames) == 1:
 		loneWerewolf = users[users.startrole == "werewolf"].iloc[0]
-		socketio.emit("loneWerewolf", namespace="/"+loneWerewolf.userid)
+		socketio.emit("loneWerewolf", room=loneWerewolf.sid)
 
-		@socketio.on("loneWerewolfRequest", namespace="/"+loneWerewolf.userid)
+		@socketio.on("loneWerewolfRequest", namespace=f"/{loneWerewolf.userid}")
 		def loneWerewolfRequest(idx):
+			if not request.sid == loneWerewolf.sid: raise Exception("Authorization Error")
 			r = config["centerRoles"][int(idx)-1]
-			socketio.emit("loneWerewolfResponse", [idx, r], namespace="/"+loneWerewolf.userid)
+			socketio.emit("loneWerewolfResponse", [idx, r], room=loneWerewolf.sid)
 
 	socketio.sleep(config["turntime"])
 
-	socketio.emit("minionTurnStart")
+	socketio.emit("minionTurnStart", room=roomid)
 
 	if any(users.startrole == "minion"):
 		minion = users[users.startrole == "minion"].iloc[0]
-		socketio.emit("minionNames", werewolfNames, namespace="/"+minion.userid)
+		socketio.emit("minionNames", werewolfNames, room=minion.sid)
 	
 	if "minion" in roles:
 		socketio.sleep(config["turntime"])
 
-	socketio.emit("seerTurnStart")
+	socketio.emit("seerTurnStart", room=roomid)
 
 	if any(users.startrole == "seer"):
 		seer = users[users.startrole == "seer"].iloc[0]
 
-		@socketio.on("seerRequest", namespace="/"+seer.userid)
+		@socketio.on("seerRequest", namespace=f"/{seer.userid}")
 		def seerRequest(names, *args):
+			if not request.sid == seer.sid: raise Exception("Authorization Error")
 			response = {}
 			for name in names:
 				if name in ["1", "2", "3"]:
@@ -87,34 +104,36 @@ def night(users, config):
 				else:
 					u = users[users.username == name].iloc[0]
 					response[name] = u.currentrole
-			socketio.emit("seerResponse", response, namespace="/"+seer.userid)
+			socketio.emit("seerResponse", response, room=seer.sid)
 
 	if "seer" in roles:
 		socketio.sleep(config["turntime"])
 
-	socketio.emit("robberTurnStart")
+	socketio.emit("robberTurnStart", room=roomid)
 
 	if any(users.startrole == "robber"):
 		robber = users[users.startrole == "robber"].iloc[0]
 
-		@socketio.on("robberRequest", namespace="/"+robber.userid)
+		@socketio.on("robberRequest", namespace=f"/{robber.userid}")
 		def robberRequest(name, *args):
+			if not request.sid == robber.sid: raise Exception("Authorization Error")
 			oldrole = users[users.startrole == "robber"].iloc[0].currentrole
 			newrole = users[users.username == name].iloc[0].currentrole
 			users.loc[users.startrole == "robber", "currentrole"] = newrole
 			users.loc[users.username == name, "currentrole"] = oldrole
-			socketio.emit("robberResponse", newrole, namespace="/"+robber.userid)
+			socketio.emit("robberResponse", newrole, room=robber.sid)
 
 	if "robber" in roles:
 		socketio.sleep(config["turntime"])
 
-	socketio.emit("drunkTurnStart")
+	socketio.emit("drunkTurnStart", room=roomid)
 
 	if any(users.startrole == "drunk"):
 		drunk = users[users.startrole == "drunk"].iloc[0]
 
-		@socketio.on("drunkRequest", namespace="/"+drunk.userid)
+		@socketio.on("drunkRequest", namespace=f"/{drunk.userid}")
 		def drunkRequest(idx, *args):
+			if not request.sid == drunk.sid: raise Exception("Authorization Error")
 			oldrole = users[users.startrole == "drunk"].iloc[0].currentrole
 			newrole = config["centerRoles"][int(idx)-1]
 			users.loc[users.startrole == "drunk", "currentrole"] = newrole
@@ -123,26 +142,30 @@ def night(users, config):
 	if "drunk" in roles:
 		socketio.sleep(config["turntime"])
 
-	socketio.emit("insomniacTurnStart")
+	socketio.emit("insomniacTurnStart", room=roomid)
 
 	if any(users.startrole == "insomniac"):
 		insomniac = users[users.startrole == "insomniac"].iloc[0]
-		socketio.emit("insomniacRole", insomniac.currentrole, namespace="/"+insomniac.userid)
+		socketio.emit("insomniacRole", insomniac.currentrole, room=insomniac.sid)
 
 	if "insomniac" in roles:
 		socketio.sleep(config["turntime"])
 
 	return users, config
 
-def day(users, config):
+def day(users, config, roomid):
 	print("Day phase")
-	socketio.emit("startDay")
+	socketio.emit("startDay", room=roomid)
+
+	# TODO: time limit for voting
 
 	votes = {u: False for u in users.userid.tolist()}
 	for uid in users.userid.tolist():
 		def voteRecieved(u, vote, *args):
+			if not "userid" in session: raise Exception("Authorization Error")
+			if not u == session["userid"]: raise Exception("Authorization Error")
 			votes[u] = vote
-		socketio.on_event("vote", partial(voteRecieved, uid), namespace="/"+uid)
+		socketio.on_event("vote", partial(voteRecieved, uid), namespace=f"/{uid}")
 	while not all(votes.values()):
 		time.sleep(0.1)
 
@@ -170,18 +193,4 @@ def day(users, config):
 		"finalRoles": finalRoles,
 		"winningTeam": "werewolf" if werewolvesWin else "villager",
 	}
-	socketio.emit("gameover", gameOverInfo)
-
-
-def waitUsersAck(userids, responseEvent, callEvent=None):
-	waitStatus = {u: False for u in userids}
-
-	for uid in userids:
-		def ackRecieved(u, *args):
-			waitStatus[u] = True
-		socketio.on_event(responseEvent, partial(ackRecieved, uid), namespace="/"+uid)
-
-	while not all(waitStatus.values()):
-		if callEvent is not None:
-			socketio.emit(callEvent)
-		time.sleep(0.1)
+	socketio.emit("gameover", gameOverInfo, room=roomid)

@@ -6,7 +6,7 @@
 	</head>
 	<body>
 		<h1>Werewolf</h1>
-		<form action="/rules" method="POST">
+		<form action="/newgame" method="POST">
 			
 			<label>Players:</label>
 			<select id="nplayers" name="nplayers">
@@ -35,6 +35,10 @@
 				<option>12</option>
 				<option>13</option>
 				<option>14</option>
+				<option>15</option>
+				<option>16</option>
+				<option>17</option>
+				<option>18</option>
 			</select>
 			<br>
 
@@ -50,6 +54,10 @@
 				<option>8 minutes</option>
 			</select>
 			<br><br>
+
+			<label>Game Identifier:</label>
+			<input name="roomid" type="hidden" value="{{roomid}}">
+			<p>{{roomid}}</p>
 
 			<input type="submit" name="submit" id="submit-button" value="Submit">
 		</form>

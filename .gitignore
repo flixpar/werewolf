@@ -33,3 +33,6 @@ instance/
 
 # Jupyter Notebook
 .ipynb_checkpoints
+
+# Other
+.vscode
