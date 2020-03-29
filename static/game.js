@@ -487,13 +487,13 @@ generalSocket.on("gameover", gameOverInfo => {
 	}
 
 	var resetForm = document.createElement("form");
-	resetForm.action = "/reset";
+	resetForm.action = "/restart/" + gameinfo["roomid"];
 	resetForm.method = "POST";
 	mainArea.appendChild(resetForm);
 
 	var resetButton = document.createElement("button");
 	resetButton.name = "submit";
-	resetButton.innerHTML = "New Game";
+	resetButton.innerHTML = "Play Again";
 	resetForm.appendChild(resetButton);
 
 });

@@ -2,6 +2,7 @@
 <html>
 	<head>
 		<title>Werewolf</title>
+		<meta http-equiv="Content-Security-Policy" content="script-src 'self' https://cdnjs.cloudflare.com;">
 	</head>
 	<body>
 		<span id="data-element" data-userid="{{userid}}" data-username="{{username}}"></span>
@@ -11,10 +12,11 @@
 		
 		<div id="main">
 			Hello {{username}}!<br>
+			Game identifier: {{roomid}}<br>
 			Waiting for game to start...
 		</div>
 
-		<script src="//cdnjs.cloudflare.com/ajax/libs/socket.io/2.2.0/socket.io.js" integrity="sha256-yr4fRk/GU1ehYJPAs8P4JlTgu0Hdsp4ZKrx8bDEDC3I=" crossorigin="anonymous"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.2.0/socket.io.js" integrity="sha256-yr4fRk/GU1ehYJPAs8P4JlTgu0Hdsp4ZKrx8bDEDC3I=" crossorigin="anonymous"></script>
 		<script src="{{ url_for('static', filename='game.js') }}"></script>
 	</body>
 </html>

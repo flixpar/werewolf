@@ -6,16 +6,11 @@ from functools import partial
 
 from server import socketio
 
-running = False
+def play(users, config, roomid):
+	users, config = night(users, config, roomid)
+	day(users, config, roomid)
 
-def play(users, config):
-	global running
-	running = True
-
-	users, config = night(users, config)
-	day(users, config)
-
-def night(users, config):
+def night(users, config, roomid):
 	print("Night phase")
 
 	waitUsersAck(users.userid.tolist(), "loaded", "serverReady")
@@ -27,6 +22,7 @@ def night(users, config):
 		"roles": roles,
 		"turntime": config["turntime"],
 		"daytime": config["daytime"],
+		"roomid": roomid,
 	})
 
 	random.shuffle(roles)
@@ -134,9 +130,11 @@ def night(users, config):
 
 	return users, config
 
-def day(users, config):
+def day(users, config, roomid):
 	print("Day phase")
 	socketio.emit("startDay")
+
+	# TODO: time limit for voting
 
 	votes = {u: False for u in users.userid.tolist()}
 	for uid in users.userid.tolist():
