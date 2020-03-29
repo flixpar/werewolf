@@ -1,6 +1,6 @@
 from flask import Flask
 from flask import render_template, redirect, request, abort, session
-from flask_socketio import SocketIO
+from flask_socketio import SocketIO, join_room
 
 import os
 import uuid
@@ -29,7 +29,7 @@ def handleNewGame():
 		rooms[roomid] = {
 			"starts": 0,
 			"rules":  rules,
-			"users":  pd.DataFrame(columns=["userid", "username", "startrole", "currentrole"])
+			"users":  pd.DataFrame(columns=["userid", "sid", "username", "startrole", "currentrole"])
 		}
 		return redirect(f"/join?roomid={roomid}")
 
@@ -61,6 +61,10 @@ def handleGamePage(roomid):
 	uid = session["userid"]
 	user = rooms[roomid]["users"][rooms[roomid]["users"]["userid"] == uid].iloc[0]
 	return render_template("game.html", username=user.username, userid=user.userid, roomid=roomid)
+
+@socketio.on("joinRoom")
+def joinRoom(roomid):
+	join_room(roomid)
 
 def handleRulesForm():
 	nplayers = int(request.form["nplayers"])
@@ -94,7 +98,7 @@ def restartHandler(roomid):
 @app.route("/reset/<roomid>", methods=["POST", "GET"])
 def resetHandler(roomid):
 	rooms[roomid]["starts"] = 0
-	rooms[roomid]["users"] = pd.DataFrame(columns=["userid", "username", "startrole", "currentrole"])
+	rooms[roomid]["users"] = pd.DataFrame(columns=["userid", "sid", "username", "startrole", "currentrole"])
 	return redirect(f"/join?roomid={roomid}")
 
 @app.route("/hardreset", methods=["POST", "GET"])

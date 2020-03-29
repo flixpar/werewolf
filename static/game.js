@@ -8,13 +8,16 @@ var gameinfo;
 
 var userid = document.getElementById("data-element").dataset.userid;
 var username = document.getElementById("data-element").dataset.username;
+var roomid = document.getElementById("data-element").dataset.roomid;
 console.log("User ID: ".concat(userid));
 console.log("User name: ".concat(username));
 
 mainArea = document.getElementById("main");
 
 var generalSocket = io();
-var playerSocket = io("/".concat(userid));
+var playerSocket = io("".concat("/", userid));
+
+generalSocket.emit("joinRoom", roomid);
 
 generalSocket.on("serverReady", _ => {
 	if (!sentLoaded) {
@@ -29,7 +32,7 @@ generalSocket.on("gameinfo", gameinfoResponse => {
 	gameinfo = gameinfoResponse;
 });
 
-playerSocket.on("distributeRole", roleResponse => {
+generalSocket.on("distributeRole", roleResponse => {
 	console.log(roleResponse);
 	role = roleResponse.role;
 
@@ -105,7 +108,7 @@ generalSocket.on("werewolfTurnStart", _ => {
 	turnStart("werewolf", "Acknowledge the other werewolf if there is one.");
 });
 
-playerSocket.on("werewolfNames", names => {
+generalSocket.on("werewolfNames", names => {
 	var s = "";
 	for (var i = 0; i < names.length; i++) {
 		s = s.concat(names[i]);
@@ -122,7 +125,7 @@ playerSocket.on("werewolfNames", names => {
 	createReadyButton("werewolfAck");
 });
 
-playerSocket.on("loneWerewolf", _ => {
+generalSocket.on("loneWerewolf", _ => {
 	var messageElement = document.createElement("p");
 	messageElement.innerHTML = "You are a lone werewolf. You may look at one center card.";
 	mainArea.appendChild(messageElement);
@@ -140,7 +143,7 @@ playerSocket.on("loneWerewolf", _ => {
 	});
 });
 
-playerSocket.on("loneWerewolfResponse", response => {
+generalSocket.on("loneWerewolfResponse", response => {
 	console.log(response);
 
 	var messageElement = document.createElement("p");
@@ -154,7 +157,7 @@ generalSocket.on("minionTurnStart", _ => {
 	turnStart("minion", "Check who the werewolves are.");
 });
 
-playerSocket.on("minionNames", names => {
+generalSocket.on("minionNames", names => {
 	var s = "";
 	for (var i = 0; i < names.length; i++) {
 		s = s.concat(names[i]);
@@ -229,7 +232,7 @@ function seerRequest() {
 	mainArea.appendChild(seerRequestButton);
 }
 
-playerSocket.on("seerResponse", seenRoles => {
+generalSocket.on("seerResponse", seenRoles => {
 
 	console.log("got seer response");
 	console.log(seenRoles);
@@ -299,7 +302,7 @@ function robberRequest() {
 	mainArea.appendChild(robberRequestButton);
 }
 
-playerSocket.on("robberResponse", newRole => {
+generalSocket.on("robberResponse", newRole => {
 	console.log("got robber response");
 	console.log(newRole);
 
@@ -346,7 +349,7 @@ generalSocket.on("insomniacTurnStart", _ => {
 	turnStart("insomniac", "Check your current role.");
 });
 
-playerSocket.on("insomniacRole", newRole => {
+generalSocket.on("insomniacRole", newRole => {
 	console.log("got insomniac response");
 	console.log(newRole);
 
