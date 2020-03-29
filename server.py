@@ -71,6 +71,12 @@ def resetHandler():
 		game.running = False
 	return redirect("/")
 
+@app.route("/hardreset", methods=["POST", "GET"])
+def hardResetHandler():
+	reset()
+	game.running = False
+	return redirect("/")
+
 def reset():
 	global users, rules
 	rules = None

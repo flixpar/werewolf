@@ -474,8 +474,8 @@ generalSocket.on("gameover", gameOverInfo => {
 		var wonElement = document.createElement("td");
 
 		nameElement.innerHTML = name;
-		startRoleElement.innerHTML = gameOverInfo.finalRoles[name];
-		finalRoleElement.innerHTML = gameOverInfo.startRoles[name];
+		startRoleElement.innerHTML = gameOverInfo.startRoles[name];
+		finalRoleElement.innerHTML = gameOverInfo.finalRoles[name];
 		wonElement.innerHTML = wonGame(gameOverInfo.finalRoles[name], gameOverInfo.winningTeam) ? "True" : "False";
 
 		row.appendChild(nameElement);
