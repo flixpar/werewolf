@@ -32,6 +32,7 @@ nplayersSelect.addEventListener("change", _ => {
 	} else if (nroles < prevnroles) {
 		for (var i = prevnroles; i > nroles; i--) {
 			document.getElementById("role-select-".concat(i)).remove();
+			document.getElementById("role-select-label-".concat(i)).remove();
 		}
 	}
 
@@ -46,21 +47,21 @@ function createRoleSelect(n) {
 	document.getElementById("role-select-area").appendChild(d);
 
 	var p = document.createElement("p");
+	p.id = "role-select-label-".concat(n);
 	p.innerHTML = "Role ".concat(n);
 	d.appendChild(p);
 
 	var s = document.createElement("select");
 	s.id = "role-select-".concat(n);
 	s.name = "role-select-".concat(n);
+	s.className = "role-selet";
 	d.appendChild(s);
-
-	var br = document.createElement("br");
-	d.appendChild(br);
 
 	allRoles.forEach(role => {
 		var option = document.createElement("option");
 		option.value = role;
 		option.innerHTML = role;
+		if (role === "villager") {option.selected = "selected";}
 		s.appendChild(option);
 	});
 

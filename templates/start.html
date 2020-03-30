@@ -2,12 +2,15 @@
 <html>
 	<head>
 		<title>Werewolf</title>
+		<link rel="stylesheet" href="{{ url_for('static', filename='start.css') }}">
 	</head>
 	<body>
-		<h1>Werewolf</h1>
-		<form action="/join" method="POST">
-			<input type="text" name="name" id="name-field" placeholder="Name"><br>
-			<input type="text" name="roomid" id="roomid-field" placeholder="Game Identifier"><br>
+		<div id="header">
+			<h1 onclick="location.href='/'">Werewolf</h1>
+		</div>
+		<form id="join-form" action="/join" method="POST">
+			<input type="text" name="name" id="name-field" placeholder="Name" required><br>
+			<input type="text" name="roomid" id="roomid-field" placeholder="Game Identifier" required><br>
 			<input type="submit" name="submit" id="submit-button" value="Start">
 		</form>
 
