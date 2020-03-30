@@ -3,12 +3,14 @@
 	<head>
 		<title>Werewolf</title>
 		<meta http-equiv="Content-Security-Policy" content="script-src 'self' https://cdnjs.cloudflare.com;">
+		<link href="https://fonts.googleapis.com/css2?family=Ribeye&family=Montserrat:wght@300;700&display=swap" rel="stylesheet">
+		<link rel="stylesheet" href="{{ url_for('static', filename='header.css') }}">
 		<link rel="stylesheet" href="{{ url_for('static', filename='game.css') }}">
 	</head>
 	<body>
 		<span id="data-element" data-userid="{{userid}}" data-username="{{username}}" data-roomid="{{roomid}}"></span>
 		<div id="header">
-			<h1 onclick="location.href='/'">Werewolf</h1>
+			<h1>Werewolf</h1>
 		</div>
 
 		<div id="board-wrapper">

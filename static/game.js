@@ -14,6 +14,8 @@ console.log("User name: ".concat(username));
 
 mainArea = document.getElementById("main");
 
+document.querySelector("#header > h1").onclick = _ => {location.href = "/";}
+
 var generalSocket = io();
 var playerSocket = io("".concat("/", userid));
 
@@ -495,9 +497,14 @@ generalSocket.on("gameover", gameOverInfo => {
 	header.appendChild(finalRoleHeader);
 	header.appendChild(wonHeader);
 
-	for (const name in gameOverInfo.finalRoles) {
-		if (["1", "2", "3"].contains(name)) {
-			continue;
+	const names = Object.keys(gameOverInfo.finalRoles);
+	const namesOrdered = names.slice(3).concat(names.slice(0, 3));
+	for (const name of namesOrdered) {
+		boardDisplayRole(name, gameOverInfo.finalRoles[name]);
+
+		let displayName = name;
+		if (["1", "2", "3"].includes(name)) {
+			displayName = "Center " + name;
 		}
 
 		var row = document.createElement("tr");
@@ -507,7 +514,7 @@ generalSocket.on("gameover", gameOverInfo => {
 		var finalRoleElement = document.createElement("td");
 		var wonElement = document.createElement("td");
 
-		nameElement.innerHTML = name;
+		nameElement.innerHTML = displayName;
 		startRoleElement.innerHTML = gameOverInfo.startRoles[name];
 		finalRoleElement.innerHTML = gameOverInfo.finalRoles[name];
 		wonElement.innerHTML = wonGame(gameOverInfo.finalRoles[name], gameOverInfo.winningTeam) ? "True" : "False";
@@ -518,8 +525,6 @@ generalSocket.on("gameover", gameOverInfo => {
 		row.appendChild(wonElement);
 
 		finalRolesTable.appendChild(row);
-
-		boardDisplayRole(name, gameOverInfo.finalRoles[name]);
 	}
 
 	var resetForm = document.createElement("form");
