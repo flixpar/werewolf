@@ -171,6 +171,14 @@ generalSocket.on("minionTurnStart", _ => {
 });
 
 generalSocket.on("minionNames", names => {
+	if (names.length == 0) {
+		var message = document.createElement("p");
+		message.id = "lone-minion-message";
+		message.innerHTML = "There are no werewolves. You are now a werewolf.";
+		mainArea.appendChild(message);
+		return;
+	}
+
 	var s = "";
 	for (var i = 0; i < names.length; i++) {
 		s = s.concat(names[i]);
@@ -387,6 +395,7 @@ generalSocket.on("insomniacRole", newRole => {
 generalSocket.on("startDay", _ => {
 	console.log("day");
 	mainArea.innerHTML = "";
+	boardHideAll();
 
 	var timer = document.createElement("p");
 	timer.id = "timer";
@@ -467,11 +476,6 @@ generalSocket.on("gameover", gameOverInfo => {
 
 	winStatusElement.innerHTML = message;
 
-	var tableTitle = document.createElement("p");
-	tableTitle.id = "roles-table-title";
-	tableTitle.innerHTML = "Final Roles";
-	mainArea.appendChild(tableTitle);
-
 	var finalRolesTable = document.createElement("table");
 	finalRolesTable.id = "final-roles-table";
 	mainArea.appendChild(finalRolesTable);
@@ -492,6 +496,10 @@ generalSocket.on("gameover", gameOverInfo => {
 	header.appendChild(wonHeader);
 
 	for (const name in gameOverInfo.finalRoles) {
+		if (["1", "2", "3"].contains(name)) {
+			continue;
+		}
+
 		var row = document.createElement("tr");
 
 		var nameElement = document.createElement("td");

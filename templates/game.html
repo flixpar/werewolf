@@ -11,18 +11,18 @@
 			<h1>Werewolf</h1>
 		</div>
 
-		<div id="board">
-			<div id="board-row-1" class="board-row"></div>
-			<div id="board-row-2" class="board-row"></div>
-			<div id="board-row-3" class="board-row"></div>
-		</div>
+		<div id="board-wrapper">
+			<div id="main">
+				Hello {{username}}!<br>
+				Game identifier: {{roomid}}<br>
+				Waiting for game to start...
+			</div>
 
-		<br><br>
-
-		<div id="main">
-			Hello {{username}}!<br>
-			Game identifier: {{roomid}}<br>
-			Waiting for game to start...
+			<div id="board">
+				<div id="board-row-1" class="board-row"></div>
+				<div id="board-row-2" class="board-row"></div>
+				<div id="board-row-3" class="board-row"></div>
+			</div>
 		</div>
 
 		<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.2.0/socket.io.js" integrity="sha256-yr4fRk/GU1ehYJPAs8P4JlTgu0Hdsp4ZKrx8bDEDC3I=" crossorigin="anonymous"></script>
