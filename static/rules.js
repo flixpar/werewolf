@@ -67,6 +67,10 @@ function createRoleSelect(n) {
 }
 
 document.getElementById("set-defaults").addEventListener("click", _ => {
+	setDefaults();
+});
+
+function setDefaults() {
 	var nplayers = parseInt(nplayersSelect.value);
 	var defaultList = defaults[nplayers];
 	if (defaultList != null) {
@@ -74,4 +78,5 @@ document.getElementById("set-defaults").addEventListener("click", _ => {
 			document.getElementById("role-select-".concat(i+1)).value = defaultList[i];
 		}
 	}
-});
+}
+setDefaults();

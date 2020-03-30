@@ -30,6 +30,7 @@ generalSocket.on("serverReady", _ => {
 generalSocket.on("gameinfo", gameinfoResponse => {
 	console.log(gameinfoResponse);
 	gameinfo = gameinfoResponse;
+	setupBoard(gameinfo);
 });
 
 generalSocket.on("distributeRole", roleResponse => {
@@ -44,17 +45,21 @@ generalSocket.on("distributeRole", roleResponse => {
 	mainArea.appendChild(roleElement);
 
 	createReadyButton("ready", "Ready");
+
+	boardDisplayRole(username, role);
 });
 
 generalSocket.on("start", _ => {
 	console.log("Game starting");
 	mainArea.innerHTML = "";
 	mainArea.innerHTML = "<p>Game starting...</p>";
+	boardHideAll();
 });
 
 function turnStart(turnRole, turnInstruction) {
 	console.log("Turn: ".concat(turnRole));
 	mainArea.innerHTML = "";
+	boardHideAll();
 
 	var turnElement = document.createElement("p");
 	turnElement.id = "turn-display";
@@ -122,6 +127,10 @@ generalSocket.on("werewolfNames", names => {
 	werewolfListElement.innerHTML = "The werewolves are: ".concat(s);
 	mainArea.appendChild(werewolfListElement);
 
+	names.forEach(name => {
+		boardDisplayRole(name, "werewolf");
+	});
+
 	createReadyButton("werewolfAck");
 });
 
@@ -129,6 +138,8 @@ generalSocket.on("loneWerewolf", _ => {
 	var messageElement = document.createElement("p");
 	messageElement.innerHTML = "You are a lone werewolf. You may look at one center card.";
 	mainArea.appendChild(messageElement);
+
+	boardDisplayRole(username, "werewolf");
 
 	var centerSelect = makeSelect("center-select", ["1", "2", "3"]);
 	mainArea.appendChild(centerSelect);
@@ -150,6 +161,8 @@ generalSocket.on("loneWerewolfResponse", response => {
 	messageElement.innerHTML = "Center card " + response[0] + " role: " + response[1];
 	mainArea.appendChild(messageElement);
 
+	boardDisplayRole(response[0], response[1]);
+
 	createReadyButton("werewolfAck");
 });
 
@@ -170,6 +183,10 @@ generalSocket.on("minionNames", names => {
 	werewolfListElement.id = "werewolf-list";
 	werewolfListElement.innerHTML = "The werewolves are: ".concat(s);
 	mainArea.appendChild(werewolfListElement);
+
+	names.forEach(name => {
+		boardDisplayRole(name, "werewolf");
+	});
 
 	createReadyButton("minionAck");
 });
@@ -264,6 +281,8 @@ generalSocket.on("seerResponse", seenRoles => {
 		row.appendChild(nameElement);
 		row.appendChild(roleElement);
 		seerResponseTable.appendChild(row);
+
+		boardDisplayRole(name, seenRoles[name]);
 	}
 
 	createReadyButton("seerAck");
@@ -311,6 +330,8 @@ generalSocket.on("robberResponse", newRole => {
 	newRoleElement.innerHTML = "Your new role is: ".concat(newRole);
 	mainArea.appendChild(newRoleElement);
 
+	boardDisplayRole(username, newRole);
+
 	createReadyButton("robberAck");
 });
 
@@ -357,6 +378,8 @@ generalSocket.on("insomniacRole", newRole => {
 	newRoleElement.id = "new-role";
 	newRoleElement.innerHTML = "Your new role is: ".concat(newRole);
 	mainArea.appendChild(newRoleElement);
+
+	boardDisplayRole(username, newRole);
 
 	createReadyButton("insomniacAck");
 });
@@ -487,6 +510,8 @@ generalSocket.on("gameover", gameOverInfo => {
 		row.appendChild(wonElement);
 
 		finalRolesTable.appendChild(row);
+
+		boardDisplayRole(name, gameOverInfo.finalRoles[name]);
 	}
 
 	var resetForm = document.createElement("form");

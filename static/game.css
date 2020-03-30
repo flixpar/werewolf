@@ -1,0 +1,41 @@
+body {
+	background-color: #2D3142;
+	color: white;
+	font-family: sans-serif;
+}
+
+#board {
+	width: 90vw;
+	min-height: 300px;
+	margin-right: auto;
+	margin-left: auto;
+	margin-top: 30px;
+	margin-bottom: 30px;
+	border: 1px solid gray;
+	padding: 15px;
+}
+
+.card {
+	width: 150px;
+	height: 250px;
+	border: 1px solid lightgray;
+
+	display: flex;
+	justify-content: center;
+	align-items: center;
+}
+
+.card-username {
+	width: 100%;
+	display: block;
+	text-align: center;
+}
+
+.board-row {
+	width: 100%;
+	display: flex;
+	flex-direction: row;
+	flex-wrap: nowrap;
+	justify-content: space-evenly;
+	margin-bottom: 20px;
+}
