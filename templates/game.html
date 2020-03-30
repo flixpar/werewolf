@@ -3,20 +3,32 @@
 	<head>
 		<title>Werewolf</title>
 		<meta http-equiv="Content-Security-Policy" content="script-src 'self' https://cdnjs.cloudflare.com;">
+		<link href="https://fonts.googleapis.com/css2?family=Ribeye&family=Montserrat:wght@300;700&display=swap" rel="stylesheet">
+		<link rel="stylesheet" href="/static/css/header.css">
+		<link rel="stylesheet" href="/static/css/game.css">
 	</head>
 	<body>
 		<span id="data-element" data-userid="{{userid}}" data-username="{{username}}" data-roomid="{{roomid}}"></span>
 		<div id="header">
 			<h1>Werewolf</h1>
 		</div>
-		
-		<div id="main">
-			Hello {{username}}!<br>
-			Game identifier: {{roomid}}<br>
-			Waiting for game to start...
+
+		<div id="board-wrapper">
+			<div id="main">
+				Hello {{username}}!<br>
+				Game identifier: {{roomid}}<br>
+				Waiting for game to start...
+			</div>
+
+			<div id="board">
+				<div id="board-row-1" class="board-row"></div>
+				<div id="board-row-2" class="board-row"></div>
+				<div id="board-row-3" class="board-row"></div>
+			</div>
 		</div>
 
 		<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.2.0/socket.io.js" integrity="sha256-yr4fRk/GU1ehYJPAs8P4JlTgu0Hdsp4ZKrx8bDEDC3I=" crossorigin="anonymous"></script>
-		<script src="{{ url_for('static', filename='game.js') }}"></script>
+		<script src="/static/js/board.js"></script>
+		<script src="/static/js/game.js"></script>
 	</body>
 </html>

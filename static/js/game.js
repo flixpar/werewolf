@@ -14,6 +14,8 @@ console.log("User name: ".concat(username));
 
 mainArea = document.getElementById("main");
 
+document.querySelector("#header > h1").onclick = _ => {location.href = "/";}
+
 var generalSocket = io();
 var playerSocket = io("".concat("/", userid));
 
@@ -30,6 +32,7 @@ generalSocket.on("serverReady", _ => {
 generalSocket.on("gameinfo", gameinfoResponse => {
 	console.log(gameinfoResponse);
 	gameinfo = gameinfoResponse;
+	setupBoard(gameinfo);
 });
 
 generalSocket.on("distributeRole", roleResponse => {
@@ -44,17 +47,21 @@ generalSocket.on("distributeRole", roleResponse => {
 	mainArea.appendChild(roleElement);
 
 	createReadyButton("ready", "Ready");
+
+	boardDisplayRole(username, role);
 });
 
 generalSocket.on("start", _ => {
 	console.log("Game starting");
 	mainArea.innerHTML = "";
 	mainArea.innerHTML = "<p>Game starting...</p>";
+	boardHideAll();
 });
 
 function turnStart(turnRole, turnInstruction) {
 	console.log("Turn: ".concat(turnRole));
 	mainArea.innerHTML = "";
+	boardHideAll();
 
 	var turnElement = document.createElement("p");
 	turnElement.id = "turn-display";
@@ -122,6 +129,10 @@ generalSocket.on("werewolfNames", names => {
 	werewolfListElement.innerHTML = "The werewolves are: ".concat(s);
 	mainArea.appendChild(werewolfListElement);
 
+	names.forEach(name => {
+		boardDisplayRole(name, "werewolf");
+	});
+
 	createReadyButton("werewolfAck");
 });
 
@@ -129,6 +140,8 @@ generalSocket.on("loneWerewolf", _ => {
 	var messageElement = document.createElement("p");
 	messageElement.innerHTML = "You are a lone werewolf. You may look at one center card.";
 	mainArea.appendChild(messageElement);
+
+	boardDisplayRole(username, "werewolf");
 
 	var centerSelect = makeSelect("center-select", ["1", "2", "3"]);
 	mainArea.appendChild(centerSelect);
@@ -150,6 +163,8 @@ generalSocket.on("loneWerewolfResponse", response => {
 	messageElement.innerHTML = "Center card " + response[0] + " role: " + response[1];
 	mainArea.appendChild(messageElement);
 
+	boardDisplayRole(response[0], response[1]);
+
 	createReadyButton("werewolfAck");
 });
 
@@ -158,6 +173,14 @@ generalSocket.on("minionTurnStart", _ => {
 });
 
 generalSocket.on("minionNames", names => {
+	if (names.length == 0) {
+		var message = document.createElement("p");
+		message.id = "lone-minion-message";
+		message.innerHTML = "There are no werewolves. You are now a werewolf.";
+		mainArea.appendChild(message);
+		return;
+	}
+
 	var s = "";
 	for (var i = 0; i < names.length; i++) {
 		s = s.concat(names[i]);
@@ -170,6 +193,10 @@ generalSocket.on("minionNames", names => {
 	werewolfListElement.id = "werewolf-list";
 	werewolfListElement.innerHTML = "The werewolves are: ".concat(s);
 	mainArea.appendChild(werewolfListElement);
+
+	names.forEach(name => {
+		boardDisplayRole(name, "werewolf");
+	});
 
 	createReadyButton("minionAck");
 });
@@ -264,6 +291,8 @@ generalSocket.on("seerResponse", seenRoles => {
 		row.appendChild(nameElement);
 		row.appendChild(roleElement);
 		seerResponseTable.appendChild(row);
+
+		boardDisplayRole(name, seenRoles[name]);
 	}
 
 	createReadyButton("seerAck");
@@ -310,6 +339,8 @@ generalSocket.on("robberResponse", newRole => {
 	newRoleElement.id = "new-role";
 	newRoleElement.innerHTML = "Your new role is: ".concat(newRole);
 	mainArea.appendChild(newRoleElement);
+
+	boardDisplayRole(username, newRole);
 
 	createReadyButton("robberAck");
 });
@@ -358,12 +389,15 @@ generalSocket.on("insomniacRole", newRole => {
 	newRoleElement.innerHTML = "Your new role is: ".concat(newRole);
 	mainArea.appendChild(newRoleElement);
 
+	boardDisplayRole(username, newRole);
+
 	createReadyButton("insomniacAck");
 });
 
 generalSocket.on("startDay", _ => {
 	console.log("day");
 	mainArea.innerHTML = "";
+	boardHideAll();
 
 	var timer = document.createElement("p");
 	timer.id = "timer";
@@ -444,11 +478,6 @@ generalSocket.on("gameover", gameOverInfo => {
 
 	winStatusElement.innerHTML = message;
 
-	var tableTitle = document.createElement("p");
-	tableTitle.id = "roles-table-title";
-	tableTitle.innerHTML = "Final Roles";
-	mainArea.appendChild(tableTitle);
-
 	var finalRolesTable = document.createElement("table");
 	finalRolesTable.id = "final-roles-table";
 	mainArea.appendChild(finalRolesTable);
@@ -468,7 +497,16 @@ generalSocket.on("gameover", gameOverInfo => {
 	header.appendChild(finalRoleHeader);
 	header.appendChild(wonHeader);
 
-	for (const name in gameOverInfo.finalRoles) {
+	const names = Object.keys(gameOverInfo.finalRoles);
+	const namesOrdered = names.slice(3).concat(names.slice(0, 3));
+	for (const name of namesOrdered) {
+		boardDisplayRole(name, gameOverInfo.finalRoles[name]);
+
+		let displayName = name;
+		if (["1", "2", "3"].includes(name)) {
+			displayName = "Center " + name;
+		}
+
 		var row = document.createElement("tr");
 
 		var nameElement = document.createElement("td");
@@ -476,7 +514,7 @@ generalSocket.on("gameover", gameOverInfo => {
 		var finalRoleElement = document.createElement("td");
 		var wonElement = document.createElement("td");
 
-		nameElement.innerHTML = name;
+		nameElement.innerHTML = displayName;
 		startRoleElement.innerHTML = gameOverInfo.startRoles[name];
 		finalRoleElement.innerHTML = gameOverInfo.finalRoles[name];
 		wonElement.innerHTML = wonGame(gameOverInfo.finalRoles[name], gameOverInfo.winningTeam) ? "True" : "False";

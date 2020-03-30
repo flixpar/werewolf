@@ -1,0 +1,39 @@
+#join-form {
+	margin-left: 30px;
+	margin-right: 30px;
+	margin-top: 25px;
+}
+
+input[type=text] {
+	margin: 5px;
+	padding: .5em .6em;
+	border: 1px solid #ccc;
+	font-size: 15px;
+	background-color: #2D3142;
+	color: white;
+	width: 200px;
+	box-sizing: border-box;
+}
+
+input[type=text]:valid {
+	background-color: #e8f0fe;
+	color: darkslategray;
+}
+
+::placeholder {
+	color: lightgray;
+}
+
+#submit-button {
+	padding: 4px;
+	border: 1px solid lightgray;
+	border-radius: 3px;
+	white-space: normal;
+	margin: 5px;
+	font-size: 15px;
+	width: 200px;
+	box-sizing: border-box;
+	background-color: #464a58;
+	color: white;
+	cursor: pointer;
+}

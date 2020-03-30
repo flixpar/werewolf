@@ -2,11 +2,16 @@
 <html>
 	<head>
 		<title>Werewolf</title>
-		<link rel="stylesheet" href="{{ url_for('static', filename='rules.css') }}">
+
+		<link href="https://fonts.googleapis.com/css2?family=Ribeye&family=Montserrat:wght@300;700&display=swap" rel="stylesheet">
+		<link rel="stylesheet" href="/static/css/header.css">
+		<link rel="stylesheet" href="/static/css/rules.css">
 	</head>
 	<body>
-		<h1>Werewolf</h1>
-		<form action="/newgame" method="POST">
+		<div id="header">
+			<h1 onclick="location.href='/'">Werewolf</h1>
+		</div>
+		<form id="game-form" action="/newgame" method="POST">
 			
 			<label>Players:</label>
 			<select id="nplayers" name="nplayers">
@@ -57,11 +62,12 @@
 
 			<label>Game Identifier:</label>
 			<input name="roomid" type="hidden" value="{{roomid}}">
-			<p>{{roomid}}</p>
+			<code id="roomid">{{roomid}}</code>
+			<br><br>
 
 			<input type="submit" name="submit" id="submit-button" value="Submit">
 		</form>
 
-		<script src="{{ url_for('static', filename='rules.js') }}"></script>
+		<script src="/static/js/rules.js"></script>
 	</body>
 </html>

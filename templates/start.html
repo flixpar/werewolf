@@ -2,15 +2,21 @@
 <html>
 	<head>
 		<title>Werewolf</title>
+
+		<link href="https://fonts.googleapis.com/css2?family=Ribeye&family=Montserrat:wght@300;700&display=swap" rel="stylesheet">
+		<link rel="stylesheet" href="/static/css/header.css">
+		<link rel="stylesheet" href="/static/css/start.css">
 	</head>
 	<body>
-		<h1>Werewolf</h1>
-		<form action="/join" method="POST">
-			<input type="text" name="name" id="name-field" placeholder="Name"><br>
-			<input type="text" name="roomid" id="roomid-field" placeholder="Game Identifier"><br>
+		<div id="header">
+			<h1 onclick="location.href='/'">Werewolf</h1>
+		</div>
+		<form id="join-form" action="/join" method="POST">
+			<input type="text" name="name" id="name-field" placeholder="Name" required><br>
+			<input type="text" name="roomid" id="roomid-field" placeholder="Game Identifier" required><br>
 			<input type="submit" name="submit" id="submit-button" value="Start">
 		</form>
 
-		<script src="{{ url_for('static', filename='start.js') }}"></script>
+		<script src="/static/js/start.js"></script>
 	</body>
 </html>
