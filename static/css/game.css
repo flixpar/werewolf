@@ -62,17 +62,22 @@
 }
 
 .card {
-	width: 150px;
-	height: 250px;
 	border: 1px solid lightgray;
 
 	display: flex;
 	justify-content: center;
 	align-items: center;
+	overflow: auto;
+
+	height: 100%;
 }
 
 .card-username {
 	width: 100%;
 	display: block;
 	text-align: center;
+}
+
+.card-img {
+	height: 100%;
 }
