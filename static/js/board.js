@@ -17,20 +17,22 @@ function setupBoard(gameinfo) {
 		let card = createCard(i, gameinfo["usernames"][i], "bottom");
 		row3.appendChild(card);
 	}
+
+	boardHideAll()
 }
 
 function boardDisplayRole(uname, role) {
-	let card = document.querySelector("[data-username='" + uname + "'] > .card");
-	card.innerHTML = role;
+	let cardImg = document.querySelector("[data-username='" + uname + "'] .card-img");
+	cardImg.src = getRoleImgURL(role);
 }
 
 function boardHideAll() {
-	document.querySelectorAll(".card").forEach(card => {card.innerHTML = "";});
+	document.querySelectorAll(".card-img").forEach(img => {img.src = getRoleImgURL("back");});
 }
 
 function boardHideRole(uname) {
-	let card = document.querySelector("[data-username='" + uname + "'] > .card");
-	card.innerHTML = "";
+	let cardImg = document.querySelector("[data-username='" + uname + "'] .card-img");
+	cardImg.src = getRoleImgURL("back");
 }
 
 function createCard(cardId, username, namePosition) {
@@ -47,6 +49,11 @@ function createCard(cardId, username, namePosition) {
 	card.id = "card-".concat(cardId);
 	card.className = "card";
 
+	let cardImg = document.createElement("img");
+	cardImg.id = "card-img-".concat(cardId);
+	cardImg.className = "card-img";
+	card.appendChild(cardImg);
+
 	if (namePosition === "top") {
 		cardWrapper.appendChild(usernameElement);
 		cardWrapper.appendChild(card);
@@ -58,4 +65,27 @@ function createCard(cardId, username, namePosition) {
 	}
 
 	return cardWrapper;
+}
+
+function getRoleImgURL(role) {
+	switch (role) {
+		case "werewolf":
+			return "/static/img/werewolf.png";
+		case "minion":
+			return "/static/img/minion.png";
+		case "seer":
+			return "/static/img/seer.png";
+		case "robber":
+			return "/static/img/robber.png";
+		case "drunk":
+			return "/static/img/drunk.png";
+		case "insomniac":
+			return "/static/img/insomniac.png";
+		case "villager":
+			return "/static/img/villager.png";
+		case "back":
+			return "/static/img/back.png";
+		default:
+			return "/static/img/back.png"
+	}
 }
